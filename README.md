@@ -60,13 +60,13 @@ O app é voltado ao **mecânico/gestor de frota em campo**: consultar veículos,
 
 ### O que fica de fora
 
-- Cadastro e edição de clientes/proprietários.
-- Controle de estoque e compra de peças.
-- Pagamento, faturamento e emissão de nota fiscal.
-- Agendamento de horários na oficina.
-- Relatórios gerenciais e dashboards.
-- Autenticação com múltiplos perfis e permissões.
-- Notificações push.
+Do sistema da UC5 não entram no aplicativo o cadastro de clientes, o controle de estoque e compra de peças, o faturamento e a emissão de nota fiscal, o agendamento de horários, os relatórios gerenciais, a gestão de perfis e permissões e as notificações push.
+
+### Convenções dos tipos
+
+- Datas são `string` no formato ISO 8601 (por exemplo, `'2026-09-18T10:30:00Z'`), em todas as entidades.
+- Relações entre entidades são feitas por campo de identificador (`veiculoId`, `mecanicoId`), sem aninhar o objeto.
+- Valores fixos usam união de literais (status, tipo, prioridade, combustível, especialidade).
 
 ## Como rodar
 
