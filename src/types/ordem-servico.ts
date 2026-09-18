@@ -18,6 +18,6 @@ export type OrdemServico = {
   status: StatusOrdemServico;
   quilometragemNoServico: number;
   custoEstimado: number;
-  dataAbertura: string; // ISO 8601
-  dataConclusao: string | null; // ISO 8601; null enquanto não concluída
+  dataAbertura: string;
+  dataConclusao: string | null;
 };
