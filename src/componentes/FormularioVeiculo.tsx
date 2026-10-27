@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { cores, espacos, raio } from '../tema/tema';
 
 interface NovoVeiculo {
   modelo: string;
@@ -27,12 +28,14 @@ export function FormularioVeiculo({ aoCriar }: FormularioVeiculoProps) {
         value={modelo}
         onChangeText={setModelo}
         placeholder="Modelo"
+        placeholderTextColor={cores.textoSecundario}
       />
       <TextInput
         style={styles.campo}
         value={placa}
         onChangeText={setPlaca}
         placeholder="Placa"
+        placeholderTextColor={cores.textoSecundario}
       />
       <Pressable style={styles.botao} onPress={tratarEnvio}>
         <Text style={styles.textoBotao}>Adicionar veículo</Text>
@@ -47,19 +50,21 @@ const styles = StyleSheet.create({
   },
   campo: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 8,
+    borderColor: cores.borda,
+    backgroundColor: cores.superficie,
+    color: cores.texto,
+    borderRadius: raio,
+    padding: espacos.sm,
+    marginBottom: espacos.sm,
   },
   botao: {
-    backgroundColor: '#1d4ed8',
-    borderRadius: 6,
+    backgroundColor: cores.destaque,
+    borderRadius: raio,
     paddingVertical: 10,
     alignItems: 'center',
   },
   textoBotao: {
-    color: '#fff',
+    color: cores.textoSobreDestaque,
     fontWeight: 'bold',
   },
 });

@@ -1,38 +1,78 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { cores, espacos, raio } from '../tema/tema';
 import type { Veiculo } from '../types';
+import { formatarPlaca, formatarQuilometragem } from '../utils/formatar';
+import { BadgeStatus } from './BadgeStatus';
 
 interface CartaoVeiculoProps {
   veiculo: Veiculo;
+  aoTocar?: () => void;
 }
 
-export function CartaoVeiculo({ veiculo }: CartaoVeiculoProps) {
+export function CartaoVeiculo({ veiculo, aoTocar }: CartaoVeiculoProps) {
   return (
-    <View style={styles.cartao}>
-      <Text style={styles.titulo}>{veiculo.modelo}</Text>
-      <Text style={styles.texto}>
-        {veiculo.marca} · {veiculo.placa}
-      </Text>
-      <Text style={styles.texto}>{veiculo.quilometragem} km</Text>
-      <Text style={styles.texto}>Status: {veiculo.status}</Text>
-    </View>
+    <Pressable
+      onPress={aoTocar}
+      style={({ pressed }) => [estilos.cartao, pressed && estilos.pressionado]}
+    >
+      <View style={estilos.linha}>
+        <View style={estilos.coluna}>
+          <Text style={estilos.titulo}>{veiculo.modelo}</Text>
+          <Text style={estilos.subtitulo}>
+            {veiculo.marca} · {formatarPlaca(veiculo.placa)}
+          </Text>
+        </View>
+        <BadgeStatus status={veiculo.status} />
+      </View>
+
+      <View style={estilos.rodape}>
+        <Text style={estilos.texto}>
+          {formatarQuilometragem(veiculo.quilometragem)}
+        </Text>
+        <Text style={estilos.texto}>
+          Próxima revisão: {formatarQuilometragem(veiculo.proximaRevisaoKm)}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const estilos = StyleSheet.create({
   cartao: {
+    backgroundColor: cores.superficie,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderColor: cores.borda,
+    borderRadius: raio,
+    padding: espacos.md,
+    marginBottom: espacos.sm,
+  },
+  pressionado: {
+    borderColor: cores.destaque,
+    backgroundColor: cores.superficieAlta,
+  },
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: espacos.sm,
+  },
+  coluna: {
+    flex: 1,
   },
   titulo: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    color: cores.texto,
+  },
+  subtitulo: {
+    color: cores.textoSecundario,
+    marginTop: espacos.xs,
+  },
+  rodape: {
+    marginTop: espacos.sm,
+    gap: espacos.xs,
   },
   texto: {
     fontSize: 14,
-    color: '#333',
+    color: cores.texto,
   },
 });

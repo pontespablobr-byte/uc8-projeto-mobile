@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { CartaoVeiculo } from './src/componentes/CartaoVeiculo';
 import { FormularioVeiculo } from './src/componentes/FormularioVeiculo';
 import { carregarVeiculos } from './src/servicos/veiculos';
+import { cores } from './src/tema/tema';
 import type { Veiculo } from './src/types';
 
 export default function App() {
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 60,
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
+    backgroundColor: cores.fundo,
   },
   lista: {
     paddingBottom: 24,
@@ -71,5 +72,6 @@ const styles = StyleSheet.create({
   aviso: {
     marginTop: 24,
     textAlign: 'center',
+    color: cores.textoSecundario,
   },
 });
