@@ -1,0 +1,88 @@
+import type { OrdemServico } from '../types';
+
+export const ordensServico: OrdemServico[] = [
+  {
+    id: '1',
+    veiculoId: '3',
+    mecanicoId: '1',
+    tipo: 'corretiva',
+    descricao: 'Barulho no motor e perda de potência',
+    prioridade: 'alta',
+    status: 'em_andamento',
+    quilometragemNoServico: 62000,
+    custoEstimado: 1850,
+    dataAbertura: '2026-10-20T08:15:00Z',
+    dataConclusao: null,
+  },
+  {
+    id: '2',
+    veiculoId: '1',
+    mecanicoId: '2',
+    tipo: 'preventiva',
+    descricao: 'Troca de pastilhas de freio e rodízio de pneus',
+    prioridade: 'media',
+    status: 'aberta',
+    quilometragemNoServico: 85000,
+    custoEstimado: 390,
+    dataAbertura: '2026-10-24T09:00:00Z',
+    dataConclusao: null,
+  },
+  {
+    id: '3',
+    veiculoId: '2',
+    mecanicoId: '1',
+    tipo: 'preventiva',
+    descricao: 'Troca de óleo e filtros (revisão de 45.000 km)',
+    prioridade: 'baixa',
+    status: 'concluida',
+    quilometragemNoServico: 44800,
+    custoEstimado: 340,
+    dataAbertura: '2026-09-18T10:30:00Z',
+    dataConclusao: '2026-09-18T16:00:00Z',
+  },
+  {
+    id: '4',
+    veiculoId: '1',
+    mecanicoId: '3',
+    tipo: 'corretiva',
+    descricao: 'Farol esquerdo apagando: falha no sistema elétrico',
+    prioridade: 'media',
+    status: 'concluida',
+    quilometragemNoServico: 82000,
+    custoEstimado: 220,
+    dataAbertura: '2026-08-05T13:20:00Z',
+    dataConclusao: '2026-08-06T11:45:00Z',
+  },
+  {
+    id: '5',
+    veiculoId: '2',
+    mecanicoId: '2',
+    tipo: 'corretiva',
+    descricao: 'Vibração no volante ao frear',
+    prioridade: 'alta',
+    status: 'cancelada',
+    quilometragemNoServico: 45000,
+    custoEstimado: 600,
+    dataAbertura: '2026-10-02T15:10:00Z',
+    dataConclusao: null,
+  },
+  {
+    id: '6',
+    veiculoId: '3',
+    mecanicoId: '3',
+    tipo: 'preventiva',
+    descricao: 'Verificação do sistema elétrico',
+    prioridade: 'baixa',
+    status: 'concluida',
+    quilometragemNoServico: 58000,
+    custoEstimado: 80,
+    dataAbertura: '2026-07-10T08:00:00Z',
+    dataConclusao: '2026-07-10T10:30:00Z',
+  },
+];
+
+export function carregarOrdens(): Promise<OrdemServico[]> {
+  return new Promise((resolver) => {
+    setTimeout(() => resolver(ordensServico), 800);
+  });
+}
