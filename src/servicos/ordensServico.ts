@@ -1,5 +1,8 @@
 import type { OrdemServico } from '../types';
 
+// Seis ordens, uma de cada situação principal. Cada veiculoId aponta para um
+// veículo de servicos/veiculos.ts (ids 1 a 3) e cada mecanicoId para um
+// mecânico de servicos/mecanicos.ts (ids 1 a 3).
 export const ordensServico: OrdemServico[] = [
   {
     id: '1',

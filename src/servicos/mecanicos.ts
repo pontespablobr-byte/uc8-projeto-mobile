@@ -1,5 +1,7 @@
 import type { Mecanico } from '../types';
 
+// Ids 1 a 3. As ordens de serviço apontam para eles por mecanicoId.
+// O telefone fica só com dígitos: formatarTelefone cuida da máscara.
 export const mecanicos: Mecanico[] = [
   {
     id: '1',
