@@ -7,10 +7,16 @@ import type { Aba } from './src/componentes/BarraAbas';
 import { carregarMecanicos } from './src/servicos/mecanicos';
 import { carregarOrdens } from './src/servicos/ordensServico';
 import { carregarVeiculos } from './src/servicos/veiculos';
+import { TelaDetalheOrdem } from './src/telas/TelaDetalheOrdem';
 import { TelaOrdens } from './src/telas/TelaOrdens';
 import { TelaVeiculos } from './src/telas/TelaVeiculos';
 import { cores, espacos, raio } from './src/tema/tema';
-import type { Mecanico, OrdemServico, Veiculo } from './src/types';
+import type {
+  Mecanico,
+  OrdemServico,
+  StatusOrdemServico,
+  Veiculo,
+} from './src/types';
 
 export default function App() {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
@@ -18,6 +24,10 @@ export default function App() {
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [aba, setAba] = useState<Aba>('veiculos');
+  // Guarda só o id: assim o detalhe sempre mostra a ordem atualizada.
+  const [ordemSelecionadaId, setOrdemSelecionadaId] = useState<string | null>(null);
+
+  const ordemSelecionada = ordens.find((ordem) => ordem.id === ordemSelecionadaId);
 
   useEffect(() => {
     Promise.all([carregarVeiculos(), carregarMecanicos(), carregarOrdens()]).then(
@@ -30,13 +40,52 @@ export default function App() {
     );
   }, []);
 
+  function mudarAba(novaAba: Aba) {
+    setAba(novaAba);
+    setOrdemSelecionadaId(null);
+  }
+
+  function atualizarStatusOrdem(id: string, status: StatusOrdemServico) {
+    setOrdens((atuais) =>
+      atuais.map((ordem) => {
+        if (ordem.id !== id || ordem.status === status) return ordem;
+        return {
+          ...ordem,
+          status,
+          dataConclusao: status === 'concluida' ? new Date().toISOString() : null,
+        };
+      }),
+    );
+  }
+
+  // Ordem de prioridade: detalhe da OS, depois a tela da aba atual.
+  function renderizarConteudo() {
+    if (ordemSelecionada) {
+      return (
+        <TelaDetalheOrdem
+          ordem={ordemSelecionada}
+          veiculo={veiculos.find((veiculo) => veiculo.id === ordemSelecionada.veiculoId)}
+          mecanico={mecanicos.find((mecanico) => mecanico.id === ordemSelecionada.mecanicoId)}
+          aoVoltar={() => setOrdemSelecionadaId(null)}
+          aoAtualizarStatus={(status) => atualizarStatusOrdem(ordemSelecionada.id, status)}
+        />
+      );
+    }
+    return renderizarAba();
+  }
+
   function renderizarAba() {
     if (aba === 'veiculos') {
       return <TelaVeiculos veiculos={veiculos} />;
     }
     if (aba === 'ordens') {
       return (
-        <TelaOrdens ordens={ordens} veiculos={veiculos} mecanicos={mecanicos} />
+        <TelaOrdens
+          ordens={ordens}
+          veiculos={veiculos}
+          mecanicos={mecanicos}
+          aoSelecionarOrdem={(ordem) => setOrdemSelecionadaId(ordem.id)}
+        />
       );
     }
     return (
@@ -61,12 +110,12 @@ export default function App() {
           </View>
         </View>
 
-        <BarraAbas abaAtual={aba} aoMudar={setAba} />
+        <BarraAbas abaAtual={aba} aoMudar={mudarAba} />
 
         {carregando ? (
           <Text style={styles.aviso}>Carregando a frota...</Text>
         ) : (
-          renderizarAba()
+          renderizarConteudo()
         )}
       </SafeAreaView>
     </SafeAreaProvider>

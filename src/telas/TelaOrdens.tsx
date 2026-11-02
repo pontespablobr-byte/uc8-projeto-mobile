@@ -15,6 +15,7 @@ interface TelaOrdensProps {
   ordens: OrdemServico[];
   veiculos: Veiculo[];
   mecanicos: Mecanico[];
+  aoSelecionarOrdem: (ordem: OrdemServico) => void;
 }
 
 type FiltroStatus = StatusOrdemServico | 'todas';
@@ -34,7 +35,12 @@ const opcoesTipo: { valor: FiltroTipo; rotulo: string }[] = [
   { valor: 'corretiva', rotulo: 'Corretiva' },
 ];
 
-export function TelaOrdens({ ordens, veiculos, mecanicos }: TelaOrdensProps) {
+export function TelaOrdens({
+  ordens,
+  veiculos,
+  mecanicos,
+  aoSelecionarOrdem,
+}: TelaOrdensProps) {
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todas');
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
 
@@ -79,6 +85,7 @@ export function TelaOrdens({ ordens, veiculos, mecanicos }: TelaOrdensProps) {
             ordem={item}
             veiculo={veiculos.find((veiculo) => veiculo.id === item.veiculoId)}
             mecanico={mecanicos.find((mecanico) => mecanico.id === item.mecanicoId)}
+            aoTocar={() => aoSelecionarOrdem(item)}
           />
         )}
         ListEmptyComponent={
