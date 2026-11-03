@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { BarraAbas } from './src/componentes/BarraAbas';
+import { Cabecalho } from './src/componentes/Cabecalho';
 import type { Aba } from './src/componentes/BarraAbas';
 import { carregarMecanicos } from './src/servicos/mecanicos';
 import { carregarOrdens } from './src/servicos/ordensServico';
@@ -12,7 +13,7 @@ import { TelaDetalheOrdem } from './src/telas/TelaDetalheOrdem';
 import { TelaNovaOrdem } from './src/telas/TelaNovaOrdem';
 import { TelaOrdens } from './src/telas/TelaOrdens';
 import { TelaVeiculos } from './src/telas/TelaVeiculos';
-import { cores, espacos, raio } from './src/tema/tema';
+import { cores, espacos } from './src/tema/tema';
 import type {
   Mecanico,
   OrdemServico,
@@ -129,15 +130,7 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <StatusBar style="light" />
 
-        <View style={styles.topo}>
-          <View style={styles.selo}>
-            <Text style={styles.textoSelo}>GM</Text>
-          </View>
-          <View>
-            <Text style={styles.titulo}>Gestão de Manutenção</Text>
-            <Text style={styles.subtitulo}>Preventiva e corretiva de veículos</Text>
-          </View>
-        </View>
+        <Cabecalho />
 
         <BarraAbas abaAtual={aba} aoMudar={mudarAba} />
 
@@ -155,36 +148,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: cores.fundo,
-  },
-  topo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espacos.md - 4,
-    paddingHorizontal: espacos.md,
-    paddingTop: espacos.md,
-    paddingBottom: espacos.md,
-  },
-  selo: {
-    width: 44,
-    height: 44,
-    borderRadius: raio,
-    backgroundColor: cores.destaque,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textoSelo: {
-    color: cores.textoSobreDestaque,
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  titulo: {
-    color: cores.texto,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  subtitulo: {
-    color: cores.textoSecundario,
-    fontSize: 13,
   },
   aviso: {
     marginTop: espacos.lg,
