@@ -7,7 +7,9 @@ import type { Aba } from './src/componentes/BarraAbas';
 import { carregarMecanicos } from './src/servicos/mecanicos';
 import { carregarOrdens } from './src/servicos/ordensServico';
 import { carregarVeiculos } from './src/servicos/veiculos';
+import type { DadosNovaOrdem } from './src/componentes/FormularioOrdemServico';
 import { TelaDetalheOrdem } from './src/telas/TelaDetalheOrdem';
+import { TelaNovaOrdem } from './src/telas/TelaNovaOrdem';
 import { TelaOrdens } from './src/telas/TelaOrdens';
 import { TelaVeiculos } from './src/telas/TelaVeiculos';
 import { cores, espacos, raio } from './src/tema/tema';
@@ -58,6 +60,31 @@ export default function App() {
     );
   }
 
+  function criarOrdem(dados: DadosNovaOrdem) {
+    const maiorId = ordens.reduce(
+      (maior, ordem) => Math.max(maior, Number(ordem.id)),
+      0,
+    );
+    const veiculo = veiculos.find((item) => item.id === dados.veiculoId);
+
+    const nova: OrdemServico = {
+      id: String(maiorId + 1),
+      veiculoId: dados.veiculoId,
+      mecanicoId: dados.mecanicoId,
+      tipo: dados.tipo,
+      descricao: dados.descricao,
+      prioridade: dados.prioridade,
+      status: 'aberta',
+      quilometragemNoServico: veiculo ? veiculo.quilometragem : 0,
+      custoEstimado: dados.custoEstimado,
+      dataAbertura: new Date().toISOString(),
+      dataConclusao: null,
+    };
+
+    setOrdens((atuais) => [nova, ...atuais]);
+    setAba('ordens');
+  }
+
   // Ordem de prioridade: detalhe da OS, depois a tela da aba atual.
   function renderizarConteudo() {
     if (ordemSelecionada) {
@@ -89,9 +116,11 @@ export default function App() {
       );
     }
     return (
-      <Text style={styles.aviso}>
-        A tela de nova ordem de serviço entra no Passo 6.
-      </Text>
+      <TelaNovaOrdem
+        veiculos={veiculos}
+        mecanicos={mecanicos}
+        aoCriar={criarOrdem}
+      />
     );
   }
 

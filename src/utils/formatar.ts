@@ -50,3 +50,15 @@ export function formatarPlaca(valor: string): string {
   if (/^[A-Z]{3}\d{4}$/.test(limpa)) return `${limpa.slice(0, 3)}-${limpa.slice(3)}`;
   return limpa;
 }
+
+// Lê o valor digitado em um campo de custo: "350", "350,50" ou "1.234,50".
+// Devolve null quando está vazio, não é número ou é negativo.
+export function lerValor(texto: string): number | null {
+  const limpo = texto.replace(/\s/g, '');
+  if (limpo === '') return null;
+  const normalizado = limpo.includes(',')
+    ? limpo.replace(/\./g, '').replace(',', '.')
+    : limpo;
+  const numero = Number(normalizado);
+  return Number.isFinite(numero) && numero >= 0 ? numero : null;
+}
