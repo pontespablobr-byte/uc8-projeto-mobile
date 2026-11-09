@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { descreverErro } from '../servicos/ordensServico';
 import { cores, espacos, raio } from '../tema/tema';
 import type { Mecanico, Prioridade, TipoManutencao, Veiculo } from '../types';
 import { formatarPlaca, formatarQuilometragem, lerValor } from '../utils/formatar';
@@ -74,7 +75,7 @@ export function FormularioOrdemServico({
       });
     } catch (falha: unknown) {
       // Mantém o que foi digitado para a pessoa poder tentar de novo.
-      setErro(falha instanceof Error ? falha.message : 'Não foi possível abrir a ordem.');
+      setErro(descreverErro(falha));
       return;
     } finally {
       setEnviando(false);

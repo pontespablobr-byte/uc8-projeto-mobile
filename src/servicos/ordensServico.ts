@@ -36,6 +36,39 @@ const TIPOS: readonly unknown[] = ['preventiva', 'corretiva'];
 const PRIORIDADES: readonly unknown[] = ['baixa', 'media', 'alta'];
 const STATUS: readonly unknown[] = ['aberta', 'em_andamento', 'concluida', 'cancelada'];
 
+export class ErroDaApi extends Error {
+  readonly status: number;
+
+  constructor(status: number, mensagem: string) {
+    super(mensagem);
+    this.name = 'ErroDaApi';
+    this.status = status;
+  }
+}
+
+export function descreverErro(erro: unknown): string {
+  if (erro instanceof ErroDaApi) {
+    return `A API respondeu ${erro.status}: ${erro.message}`;
+  }
+  if (erro instanceof Error) {
+    return erro.message;
+  }
+  return 'Erro desconhecido';
+}
+
+function ehMensagemDeErro(valor: unknown): valor is { message: string } {
+  return (
+    typeof valor === 'object' &&
+    valor !== null &&
+    typeof (valor as Record<string, unknown>).message === 'string'
+  );
+}
+
+async function lerMensagemDeErro(resposta: Response): Promise<string> {
+  const corpo: unknown = await resposta.json().catch(() => undefined);
+  return ehMensagemDeErro(corpo) ? corpo.message : 'sem detalhe no corpo da resposta';
+}
+
 function configuracao(): { url: string; chave: string } {
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
   const chave = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -101,7 +134,7 @@ async function requisitar(
     body: corpo === undefined ? undefined : JSON.stringify(corpo),
   });
   if (!resposta.ok) {
-    throw new Error(`A API respondeu ${resposta.status}`);
+    throw new ErroDaApi(resposta.status, await lerMensagemDeErro(resposta));
   }
   return resposta.json();
 }
