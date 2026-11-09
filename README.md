@@ -66,6 +66,17 @@ Do sistema da UC5 não entram no aplicativo o cadastro de clientes, o controle d
 - Relações entre entidades são feitas por campo de identificador (`veiculoId`, `mecanicoId`), sem aninhar o objeto.
 - Valores fixos usam união de literais (status, tipo, prioridade, combustível, especialidade).
 
+## Configuração
+
+O aplicativo lê a URL do projeto e a chave publicável do Supabase de um arquivo `.env.local`, que não vai para o repositório. Copie `.env.example` para `.env.local` e use estes valores:
+
+```
+EXPO_PUBLIC_SUPABASE_URL=https://ddrvcftkgcxkluiaynij.supabase.co
+EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_YMkHJovlh9xJkdXqVtFjQQ_cOMHpRkI
+```
+
+A tabela `ordens_servico` é criada com o arquivo `supabase/esquema.sql`, executado uma vez no SQL Editor do projeto.
+
 ## Como rodar
 
 ```bash
