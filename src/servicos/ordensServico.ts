@@ -1,91 +1,132 @@
-import type { OrdemServico } from '../types';
+import type {
+  OrdemServico,
+  Prioridade,
+  StatusOrdemServico,
+  TipoManutencao,
+} from '../types';
 
-// Seis ordens, uma de cada situação principal. Cada veiculoId aponta para um
-// veículo de servicos/veiculos.ts (ids 1 a 3) e cada mecanicoId para um
-// mecânico de servicos/mecanicos.ts (ids 1 a 3).
-export const ordensServico: OrdemServico[] = [
-  {
-    id: '1',
-    veiculoId: '3',
-    mecanicoId: '1',
-    tipo: 'corretiva',
-    descricao: 'Barulho no motor e perda de potência',
-    prioridade: 'alta',
-    status: 'em_andamento',
-    quilometragemNoServico: 62000,
-    custoEstimado: 1850,
-    dataAbertura: '2026-10-20T08:15:00Z',
-    dataConclusao: null,
-  },
-  {
-    id: '2',
-    veiculoId: '1',
-    mecanicoId: '2',
-    tipo: 'preventiva',
-    descricao: 'Troca de pastilhas de freio e rodízio de pneus',
-    prioridade: 'media',
-    status: 'aberta',
-    quilometragemNoServico: 85000,
-    custoEstimado: 390,
-    dataAbertura: '2026-10-24T09:00:00Z',
-    dataConclusao: null,
-  },
-  {
-    id: '3',
-    veiculoId: '2',
-    mecanicoId: '1',
-    tipo: 'preventiva',
-    descricao: 'Troca de óleo e filtros (revisão de 45.000 km)',
-    prioridade: 'baixa',
-    status: 'concluida',
-    quilometragemNoServico: 44800,
-    custoEstimado: 340,
-    dataAbertura: '2026-09-18T10:30:00Z',
-    dataConclusao: '2026-09-18T16:00:00Z',
-  },
-  {
-    id: '4',
-    veiculoId: '1',
-    mecanicoId: '3',
-    tipo: 'corretiva',
-    descricao: 'Farol esquerdo apagando: falha no sistema elétrico',
-    prioridade: 'media',
-    status: 'concluida',
-    quilometragemNoServico: 82000,
-    custoEstimado: 220,
-    dataAbertura: '2026-08-05T13:20:00Z',
-    dataConclusao: '2026-08-06T11:45:00Z',
-  },
-  {
-    id: '5',
-    veiculoId: '2',
-    mecanicoId: '2',
-    tipo: 'corretiva',
-    descricao: 'Vibração no volante ao frear',
-    prioridade: 'alta',
-    status: 'cancelada',
-    quilometragemNoServico: 45000,
-    custoEstimado: 600,
-    dataAbertura: '2026-10-02T15:10:00Z',
-    dataConclusao: null,
-  },
-  {
-    id: '6',
-    veiculoId: '3',
-    mecanicoId: '3',
-    tipo: 'preventiva',
-    descricao: 'Verificação do sistema elétrico',
-    prioridade: 'baixa',
-    status: 'concluida',
-    quilometragemNoServico: 58000,
-    custoEstimado: 80,
-    dataAbertura: '2026-07-10T08:00:00Z',
-    dataConclusao: '2026-07-10T10:30:00Z',
-  },
-];
+export interface DadosInclusaoOrdem {
+  veiculoId: string;
+  mecanicoId: string;
+  tipo: TipoManutencao;
+  prioridade: Prioridade;
+  descricao: string;
+  custoEstimado: number;
+  quilometragemNoServico: number;
+}
 
-export function carregarOrdens(): Promise<OrdemServico[]> {
-  return new Promise((resolver) => {
-    setTimeout(() => resolver(ordensServico), 800);
+interface LinhaNovaOrdem {
+  veiculo_id: number;
+  mecanico_id: number;
+  tipo: TipoManutencao;
+  prioridade: Prioridade;
+  descricao: string;
+  custo_estimado: number;
+  quilometragem_no_servico: number;
+}
+
+interface OrdemRemota extends LinhaNovaOrdem {
+  id: number;
+  status: StatusOrdemServico;
+  data_abertura: string;
+  data_conclusao: string | null;
+}
+
+const TIPOS: readonly unknown[] = ['preventiva', 'corretiva'];
+const PRIORIDADES: readonly unknown[] = ['baixa', 'media', 'alta'];
+const STATUS: readonly unknown[] = ['aberta', 'em_andamento', 'concluida', 'cancelada'];
+
+function configuracao(): { url: string; chave: string } {
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const chave = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+  if (url === undefined || chave === undefined) {
+    throw new Error('Defina EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_KEY em .env.local');
+  }
+  return { url, chave };
+}
+
+function ehOrdemRemota(valor: unknown): valor is OrdemRemota {
+  if (typeof valor !== 'object' || valor === null) {
+    return false;
+  }
+  const campos = valor as Record<string, unknown>;
+  return (
+    typeof campos.id === 'number' &&
+    typeof campos.veiculo_id === 'number' &&
+    typeof campos.mecanico_id === 'number' &&
+    TIPOS.includes(campos.tipo) &&
+    typeof campos.descricao === 'string' &&
+    PRIORIDADES.includes(campos.prioridade) &&
+    STATUS.includes(campos.status) &&
+    typeof campos.quilometragem_no_servico === 'number' &&
+    typeof campos.custo_estimado === 'number' &&
+    typeof campos.data_abertura === 'string' &&
+    (campos.data_conclusao === null || typeof campos.data_conclusao === 'string')
+  );
+}
+
+function ehListaDeOrdens(valor: unknown): valor is OrdemRemota[] {
+  return Array.isArray(valor) && valor.every(ehOrdemRemota);
+}
+
+function paraOrdem(remota: OrdemRemota): OrdemServico {
+  return {
+    id: String(remota.id),
+    veiculoId: String(remota.veiculo_id),
+    mecanicoId: String(remota.mecanico_id),
+    tipo: remota.tipo,
+    descricao: remota.descricao,
+    prioridade: remota.prioridade,
+    status: remota.status,
+    quilometragemNoServico: remota.quilometragem_no_servico,
+    custoEstimado: remota.custo_estimado,
+    dataAbertura: remota.data_abertura,
+    dataConclusao: remota.data_conclusao,
+  };
+}
+
+async function requisitar(
+  caminho: string,
+  metodo: 'GET' | 'POST' = 'GET',
+  corpo?: LinhaNovaOrdem,
+): Promise<unknown> {
+  const { url, chave } = configuracao();
+  const resposta = await fetch(`${url}/rest/v1/${caminho}`, {
+    method: metodo,
+    headers: {
+      apikey: chave,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: corpo === undefined ? undefined : JSON.stringify(corpo),
   });
+  if (!resposta.ok) {
+    throw new Error(`A API respondeu ${resposta.status}`);
+  }
+  return resposta.json();
+}
+
+// Mais recentes primeiro, a mesma posição em que uma ordem nova entra na lista.
+export async function carregarOrdens(): Promise<OrdemServico[]> {
+  const corpo = await requisitar('ordens_servico?select=*&order=id.desc');
+  if (!ehListaDeOrdens(corpo)) {
+    throw new Error('Resposta inesperada da API');
+  }
+  return corpo.map(paraOrdem);
+}
+
+export async function incluirOrdem(dados: DadosInclusaoOrdem): Promise<OrdemServico> {
+  const corpo = await requisitar('ordens_servico?select=*', 'POST', {
+    veiculo_id: Number(dados.veiculoId),
+    mecanico_id: Number(dados.mecanicoId),
+    tipo: dados.tipo,
+    prioridade: dados.prioridade,
+    descricao: dados.descricao,
+    custo_estimado: dados.custoEstimado,
+    quilometragem_no_servico: dados.quilometragemNoServico,
+  });
+  if (!ehListaDeOrdens(corpo) || corpo.length !== 1) {
+    throw new Error('Resposta inesperada da API');
+  }
+  return paraOrdem(corpo[0]);
 }

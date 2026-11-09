@@ -18,7 +18,7 @@ export interface DadosNovaOrdem {
 interface FormularioOrdemServicoProps {
   veiculos: Veiculo[];
   mecanicos: Mecanico[];
-  aoCriar: (dados: DadosNovaOrdem) => void;
+  aoCriar: (dados: DadosNovaOrdem) => Promise<void>;
 }
 
 const tipos: TipoManutencao[] = ['preventiva', 'corretiva'];
@@ -36,10 +36,13 @@ export function FormularioOrdemServico({
   const [descricao, setDescricao] = useState('');
   const [custo, setCusto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
   const veiculoEscolhido = veiculos.find((veiculo) => veiculo.id === veiculoId);
 
-  function tratarEnvio() {
+  async function tratarEnvio() {
+    if (enviando) return;
+
     const custoEstimado = lerValor(custo);
 
     if (veiculoId === null) {
@@ -59,14 +62,23 @@ export function FormularioOrdemServico({
       return;
     }
 
-    aoCriar({
-      veiculoId,
-      mecanicoId,
-      tipo,
-      prioridade,
-      descricao: descricao.trim(),
-      custoEstimado,
-    });
+    setEnviando(true);
+    try {
+      await aoCriar({
+        veiculoId,
+        mecanicoId,
+        tipo,
+        prioridade,
+        descricao: descricao.trim(),
+        custoEstimado,
+      });
+    } catch (falha: unknown) {
+      // Mantém o que foi digitado para a pessoa poder tentar de novo.
+      setErro(falha instanceof Error ? falha.message : 'Não foi possível abrir a ordem.');
+      return;
+    } finally {
+      setEnviando(false);
+    }
 
     setErro(null);
     setVeiculoId(null);
@@ -154,8 +166,10 @@ export function FormularioOrdemServico({
 
       {erro !== null && <Text style={estilos.erro}>{erro}</Text>}
 
-      <Pressable style={estilos.botao} onPress={tratarEnvio}>
-        <Text style={estilos.textoBotao}>Abrir ordem de serviço</Text>
+      <Pressable style={estilos.botao} onPress={tratarEnvio} disabled={enviando}>
+        <Text style={estilos.textoBotao}>
+          {enviando ? 'Enviando...' : 'Abrir ordem de serviço'}
+        </Text>
       </Pressable>
     </View>
   );

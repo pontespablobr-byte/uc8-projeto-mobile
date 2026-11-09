@@ -6,7 +6,7 @@ import { BarraAbas } from './src/componentes/BarraAbas';
 import { Cabecalho } from './src/componentes/Cabecalho';
 import type { Aba } from './src/componentes/BarraAbas';
 import { carregarMecanicos } from './src/servicos/mecanicos';
-import { carregarOrdens } from './src/servicos/ordensServico';
+import { carregarOrdens, incluirOrdem } from './src/servicos/ordensServico';
 import { carregarVeiculos } from './src/servicos/veiculos';
 import type { DadosNovaOrdem } from './src/componentes/FormularioOrdemServico';
 import { TelaDetalheOrdem } from './src/telas/TelaDetalheOrdem';
@@ -26,6 +26,7 @@ export default function App() {
   const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [erroCarga, setErroCarga] = useState<string | null>(null);
   const [aba, setAba] = useState<Aba>('veiculos');
   // Guarda só o id: assim o detalhe sempre mostra a ordem atualizada.
   const [ordemSelecionadaId, setOrdemSelecionadaId] = useState<string | null>(null);
@@ -33,14 +34,16 @@ export default function App() {
   const ordemSelecionada = ordens.find((ordem) => ordem.id === ordemSelecionadaId);
 
   useEffect(() => {
-    Promise.all([carregarVeiculos(), carregarMecanicos(), carregarOrdens()]).then(
-      ([veiculosCarregados, mecanicosCarregados, ordensCarregadas]) => {
+    Promise.all([carregarVeiculos(), carregarMecanicos(), carregarOrdens()])
+      .then(([veiculosCarregados, mecanicosCarregados, ordensCarregadas]) => {
         setVeiculos(veiculosCarregados);
         setMecanicos(mecanicosCarregados);
         setOrdens(ordensCarregadas);
-        setCarregando(false);
-      },
-    );
+      })
+      .catch((erro: unknown) => {
+        setErroCarga(erro instanceof Error ? erro.message : 'Erro desconhecido');
+      })
+      .finally(() => setCarregando(false));
   }, []);
 
   function mudarAba(novaAba: Aba) {
@@ -61,26 +64,14 @@ export default function App() {
     );
   }
 
-  function criarOrdem(dados: DadosNovaOrdem) {
-    const maiorId = ordens.reduce(
-      (maior, ordem) => Math.max(maior, Number(ordem.id)),
-      0,
-    );
+  async function criarOrdem(dados: DadosNovaOrdem): Promise<void> {
     const veiculo = veiculos.find((item) => item.id === dados.veiculoId);
 
-    const nova: OrdemServico = {
-      id: String(maiorId + 1),
-      veiculoId: dados.veiculoId,
-      mecanicoId: dados.mecanicoId,
-      tipo: dados.tipo,
-      descricao: dados.descricao,
-      prioridade: dados.prioridade,
-      status: 'aberta',
+    // O banco define o id, o status inicial e a data de abertura.
+    const nova = await incluirOrdem({
+      ...dados,
       quilometragemNoServico: veiculo ? veiculo.quilometragem : 0,
-      custoEstimado: dados.custoEstimado,
-      dataAbertura: new Date().toISOString(),
-      dataConclusao: null,
-    };
+    });
 
     setOrdens((atuais) => [nova, ...atuais]);
     setAba('ordens');
@@ -136,6 +127,8 @@ export default function App() {
 
         {carregando ? (
           <Text style={styles.aviso}>Carregando a frota...</Text>
+        ) : erroCarga !== null ? (
+          <Text style={styles.aviso}>Não foi possível carregar: {erroCarga}</Text>
         ) : (
           renderizarConteudo()
         )}

@@ -7,7 +7,7 @@ import type { Mecanico, Veiculo } from '../types';
 interface TelaNovaOrdemProps {
   veiculos: Veiculo[];
   mecanicos: Mecanico[];
-  aoCriar: (dados: DadosNovaOrdem) => void;
+  aoCriar: (dados: DadosNovaOrdem) => Promise<void>;
 }
 
 export function TelaNovaOrdem({ veiculos, mecanicos, aoCriar }: TelaNovaOrdemProps) {
