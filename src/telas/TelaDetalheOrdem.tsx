@@ -1,13 +1,10 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AvisoEstadoFrota } from '../componentes/AvisoEstadoFrota';
 import { BadgeStatus } from '../componentes/BadgeStatus';
 import { Chip } from '../componentes/Chip';
+import { useFrota } from '../contexto/FrotaContexto';
 import { cores, espacos, raio } from '../tema/tema';
-import type {
-  Mecanico,
-  OrdemServico,
-  StatusOrdemServico,
-  Veiculo,
-} from '../types';
+import type { StatusOrdemServico } from '../types';
 import {
   formatarData,
   formatarMoeda,
@@ -23,11 +20,8 @@ import {
 } from '../utils/rotulos';
 
 interface TelaDetalheOrdemProps {
-  ordem: OrdemServico;
-  veiculo?: Veiculo;
-  mecanico?: Mecanico;
+  ordemId: string;
   aoVoltar: () => void;
-  aoAtualizarStatus: (status: StatusOrdemServico) => void;
 }
 
 const statusDisponiveis: StatusOrdemServico[] = [
@@ -51,18 +45,35 @@ function Linha({ rotulo, valor }: LinhaProps) {
   );
 }
 
-export function TelaDetalheOrdem({
-  ordem,
-  veiculo,
-  mecanico,
-  aoVoltar,
-  aoAtualizarStatus,
-}: TelaDetalheOrdemProps) {
+export function TelaDetalheOrdem({ ordemId, aoVoltar }: TelaDetalheOrdemProps) {
+  const { estado, recarregar, atualizarStatus } = useFrota();
+
+  if (estado.tipo !== 'pronto') {
+    return <AvisoEstadoFrota estado={estado} aoTentarDeNovo={recarregar} />;
+  }
+
+  const ordem = estado.ordens.find((item) => item.id === ordemId);
+  const botaoVoltar = (
+    <Pressable onPress={aoVoltar} style={estilos.voltar}>
+      <Text style={estilos.textoVoltar}>← Voltar</Text>
+    </Pressable>
+  );
+
+  if (ordem === undefined) {
+    return (
+      <ScrollView contentContainerStyle={estilos.conteudo}>
+        {botaoVoltar}
+        <Text style={estilos.descricao}>Ordem de serviço não encontrada.</Text>
+      </ScrollView>
+    );
+  }
+
+  const veiculo = estado.veiculos.find((item) => item.id === ordem.veiculoId);
+  const mecanico = estado.mecanicos.find((item) => item.id === ordem.mecanicoId);
+
   return (
     <ScrollView contentContainerStyle={estilos.conteudo}>
-      <Pressable onPress={aoVoltar} style={estilos.voltar}>
-        <Text style={estilos.textoVoltar}>← Voltar</Text>
-      </Pressable>
+      {botaoVoltar}
 
       <View style={estilos.cabecalho}>
         <Text style={estilos.numero}>OS #{ordem.id}</Text>
@@ -122,7 +133,7 @@ export function TelaDetalheOrdem({
               key={status}
               rotulo={rotulosStatusOrdem[status]}
               ativo={ordem.status === status}
-              aoTocar={() => aoAtualizarStatus(status)}
+              aoTocar={() => atualizarStatus(ordem.id, status)}
             />
           ))}
         </View>

@@ -1,20 +1,13 @@
 import { useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { AvisoEstadoFrota } from '../componentes/AvisoEstadoFrota';
 import { CartaoOrdemServico } from '../componentes/CartaoOrdemServico';
 import { Chip } from '../componentes/Chip';
+import { useFrota } from '../contexto/FrotaContexto';
 import { cores, espacos } from '../tema/tema';
-import type {
-  Mecanico,
-  OrdemServico,
-  StatusOrdemServico,
-  TipoManutencao,
-  Veiculo,
-} from '../types';
+import type { OrdemServico, StatusOrdemServico, TipoManutencao } from '../types';
 
 interface TelaOrdensProps {
-  ordens: OrdemServico[];
-  veiculos: Veiculo[];
-  mecanicos: Mecanico[];
   aoSelecionarOrdem: (ordem: OrdemServico) => void;
 }
 
@@ -35,14 +28,16 @@ const opcoesTipo: { valor: FiltroTipo; rotulo: string }[] = [
   { valor: 'corretiva', rotulo: 'Corretiva' },
 ];
 
-export function TelaOrdens({
-  ordens,
-  veiculos,
-  mecanicos,
-  aoSelecionarOrdem,
-}: TelaOrdensProps) {
+export function TelaOrdens({ aoSelecionarOrdem }: TelaOrdensProps) {
+  const { estado, recarregar } = useFrota();
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todas');
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
+
+  if (estado.tipo !== 'pronto') {
+    return <AvisoEstadoFrota estado={estado} aoTentarDeNovo={recarregar} />;
+  }
+
+  const { ordens, veiculos, mecanicos } = estado;
 
   // O filtro já devolve um array novo; a ordenação (id decrescente) age nele.
   const visiveis = ordens

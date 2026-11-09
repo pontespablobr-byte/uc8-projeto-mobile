@@ -1,16 +1,33 @@
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { AvisoEstadoFrota } from '../componentes/AvisoEstadoFrota';
 import { FormularioOrdemServico } from '../componentes/FormularioOrdemServico';
 import type { DadosNovaOrdem } from '../componentes/FormularioOrdemServico';
+import { useFrota } from '../contexto/FrotaContexto';
 import { espacos } from '../tema/tema';
-import type { Mecanico, Veiculo } from '../types';
 
 interface TelaNovaOrdemProps {
-  veiculos: Veiculo[];
-  mecanicos: Mecanico[];
-  aoCriar: (dados: DadosNovaOrdem) => Promise<void>;
+  aoCriar: () => void;
 }
 
-export function TelaNovaOrdem({ veiculos, mecanicos, aoCriar }: TelaNovaOrdemProps) {
+export function TelaNovaOrdem({ aoCriar }: TelaNovaOrdemProps) {
+  const { estado, recarregar, incluir } = useFrota();
+
+  if (estado.tipo !== 'pronto') {
+    return <AvisoEstadoFrota estado={estado} aoTentarDeNovo={recarregar} />;
+  }
+
+  const { veiculos, mecanicos } = estado;
+
+  // O banco define o id, o status inicial e a data de abertura.
+  async function criar(dados: DadosNovaOrdem): Promise<void> {
+    const veiculo = veiculos.find((item) => item.id === dados.veiculoId);
+    await incluir({
+      ...dados,
+      quilometragemNoServico: veiculo ? veiculo.quilometragem : 0,
+    });
+    aoCriar();
+  }
+
   return (
     <KeyboardAvoidingView
       style={estilos.tela}
@@ -23,7 +40,7 @@ export function TelaNovaOrdem({ veiculos, mecanicos, aoCriar }: TelaNovaOrdemPro
         <FormularioOrdemServico
           veiculos={veiculos.filter((veiculo) => veiculo.status !== 'inativo')}
           mecanicos={mecanicos.filter((mecanico) => mecanico.ativo)}
-          aoCriar={aoCriar}
+          aoCriar={criar}
         />
       </ScrollView>
     </KeyboardAvoidingView>

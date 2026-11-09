@@ -1,22 +1,24 @@
 import { useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AvisoEstadoFrota } from '../componentes/AvisoEstadoFrota';
 import { CartaoVeiculo } from '../componentes/CartaoVeiculo';
+import { useFrota } from '../contexto/FrotaContexto';
 import { cores, espacos, raio } from '../tema/tema';
-import type { Veiculo } from '../types';
-
-interface TelaVeiculosProps {
-  veiculos: Veiculo[];
-}
 
 function semSeparadores(texto: string): string {
   return texto.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-export function TelaVeiculos({ veiculos }: TelaVeiculosProps) {
+export function TelaVeiculos() {
+  const { estado, recarregar } = useFrota();
   const [busca, setBusca] = useState('');
 
+  if (estado.tipo !== 'pronto') {
+    return <AvisoEstadoFrota estado={estado} aoTentarDeNovo={recarregar} />;
+  }
+
   const termo = semSeparadores(busca);
-  const filtrados = veiculos.filter(
+  const filtrados = estado.veiculos.filter(
     (veiculo) =>
       semSeparadores(veiculo.placa).includes(termo) ||
       semSeparadores(veiculo.modelo).includes(termo),
