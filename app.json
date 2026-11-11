@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "uc8-projeto-mobile",
+    "name": "🚚 GESTÃO",
     "slug": "uc8-projeto-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,6 +20,19 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O app usa suas fotos para anexar imagens às ordens de serviço.",
+          "cameraPermission": "O app usa a câmera para fotografar o veículo na ordem de serviço.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-sqlite"
+    ]
   }
 }
