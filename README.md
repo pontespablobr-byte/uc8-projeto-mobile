@@ -47,14 +47,24 @@ O app é voltado ao **mecânico/gestor de frota em campo**: consultar veículos,
 | custoEstimado | number |
 | dataAbertura | string (ISO 8601) |
 | dataConclusao | string \| null (ISO 8601) |
+| fotoUrl | string \| null (endereço público no Storage) |
 
-### Telas previstas (5)
+### Telas (barra de abas embaixo)
 
-1. **Lista de veículos**: busca por placa/modelo e indicação de status e revisão próxima.
-2. **Detalhe do veículo**: dados do veículo e histórico de ordens de serviço.
-3. **Lista de ordens de serviço**: filtro por status e por tipo (preventiva/corretiva).
-4. **Nova ordem de serviço**: formulário com veículo, mecânico, tipo, prioridade e descrição.
-5. **Detalhe da ordem de serviço**: acompanhar e atualizar o status (aberta, em andamento, concluída, cancelada).
+1. **Veículos**: busca por placa/modelo, quantidade por marca e cadastro de veículos e mecânicos.
+2. **Ordens**: filtro por status; PDF na aba Concluída; exclusão nas abas Aberta e Cancelada.
+3. **Detalhe da ordem de serviço**: foto, edição, troca de status, PDF (concluída) e exclusão (aberta ou cancelada).
+4. **Nova OS**: veículo, mecânico, tipo, prioridade, descrição, custo e foto (câmera ou galeria).
+5. **Relatórios**: valor de cada serviço concluído, subtotal por tipo e valor geral.
+6. **Sobre**: contagem de registros, o que o app faz e o que está guardado no aparelho.
+
+### Dados no aparelho e erros
+
+- A cada carga com rede, veículos, mecânicos e ordens são guardados no aparelho (`src/banco`, com `expo-sqlite`). Sem rede, o app mostra essa cópia e avisa de onde ela veio.
+- A ordem aberta sem rede fica na fila do aparelho ("A enviar") e sobe na próxima carga com rede (`src/servicos/sincronizacao.ts`).
+- Os erros passam por um só lugar (`src/erros/erros.ts`): `classificarErro` escolhe a mensagem da tela e `registrarErro` escreve a origem e o detalhe no console.
+- No navegador o banco do aparelho não é usado (o `expo-sqlite` para web ainda é experimental): a lista vem só da nuvem.
+- O roteiro de teste, com os resultados, está em `docs/roteiro_de_teste.md`.
 
 ### O que fica de fora
 
@@ -75,7 +85,13 @@ EXPO_PUBLIC_SUPABASE_URL=https://ddrvcftkgcxkluiaynij.supabase.co
 EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_YMkHJovlh9xJkdXqVtFjQQ_cOMHpRkI
 ```
 
-A tabela `ordens_servico` é criada com o arquivo `supabase/esquema.sql`, executado uma vez no SQL Editor do projeto.
+As tabelas são criadas no SQL Editor do projeto, executando uma vez cada arquivo, nesta ordem:
+
+1. `supabase/esquema.sql`: tabela `ordens_servico`.
+2. `supabase/esquema_frota.sql`: tabelas `veiculos` e `mecanicos`.
+3. `supabase/edicao_e_fotos.sql`: edição das ordens e pasta `fotos-os` para as fotos.
+4. `supabase/exclusao.sql`: exclusão só de ordens abertas ou canceladas.
+5. `supabase/endurecimento.sql`: o app não altera nem apaga veículos e mecânicos (`revoke`).
 
 ## Como rodar
 
