@@ -21,10 +21,19 @@ export function formatarMoeda(valor: number): string {
 
 // "2026-09-18" ou "2026-09-18T10:30:00Z" -> "18/09/2026"
 // Texto que não começa com AAAA-MM-DD volta como veio.
+// Data com horário é mostrada no fuso do aparelho, não no UTC.
 export function formatarData(data: string): string {
   const [ano, mes, dia] = data.slice(0, 10).split('-');
   if (!ano || !mes || !dia) return data;
-  return `${dia}/${mes}/${ano}`;
+  if (data.length === 10) return `${dia}/${mes}/${ano}`;
+
+  // O banco devolve microssegundos; o Date só precisa dos milissegundos.
+  const momento = new Date(data.replace(/(\.\d{3})\d+/, '$1'));
+  if (Number.isNaN(momento.getTime())) return `${dia}/${mes}/${ano}`;
+
+  const diaLocal = String(momento.getDate()).padStart(2, '0');
+  const mesLocal = String(momento.getMonth() + 1).padStart(2, '0');
+  return `${diaLocal}/${mesLocal}/${momento.getFullYear()}`;
 }
 
 // "84988887777" -> "(84) 98888-7777" | "8433334444" -> "(84) 3333-4444"
@@ -51,14 +60,25 @@ export function formatarPlaca(valor: string): string {
   return limpa;
 }
 
-// Lê o valor digitado em um campo de custo: "350", "350,50" ou "1.234,50".
-// Devolve null quando está vazio, não é número ou é negativo.
+// Lê um número inteiro digitado: "85000" ou "85.000". Devolve null se não for um.
+export function lerInteiro(texto: string): number | null {
+  const limpo = texto.replace(/\s/g, '');
+  if (!/^\d+$|^\d{1,3}(\.\d{3})+$/.test(limpo)) return null;
+  return Number(limpo.replace(/\./g, ''));
+}
+
+const valorComMilhar =/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/;
+const valorSemMilhar = /^\d+([.,]\d{1,2})?$/;
+
+// Lê o valor digitado em um campo de custo: "350", "350,50", "1.234" ou "1.234,50".
+// Devolve null quando está vazio, não é um valor em reais ou é negativo.
 export function lerValor(texto: string): number | null {
   const limpo = texto.replace(/\s/g, '');
-  if (limpo === '') return null;
-  const normalizado = limpo.includes(',')
-    ? limpo.replace(/\./g, '').replace(',', '.')
-    : limpo;
-  const numero = Number(normalizado);
-  return Number.isFinite(numero) && numero >= 0 ? numero : null;
+  if (valorComMilhar.test(limpo)) {
+    return Number(limpo.replace(/\./g, '').replace(',', '.'));
+  }
+  if (valorSemMilhar.test(limpo)) {
+    return Number(limpo.replace(',', '.'));
+  }
+  return null;
 }

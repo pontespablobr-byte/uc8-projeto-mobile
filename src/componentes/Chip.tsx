@@ -5,13 +5,15 @@ interface ChipProps {
   rotulo: string;
   ativo: boolean;
   aoTocar: () => void;
+  // Para grades de largura igual: menos folga e a altura inteira da célula.
+  compacto?: boolean;
 }
 
-export function Chip({ rotulo, ativo, aoTocar }: ChipProps) {
+export function Chip({ rotulo, ativo, aoTocar, compacto = false }: ChipProps) {
   return (
     <Pressable
       onPress={aoTocar}
-      style={[estilos.chip, ativo && estilos.chipAtivo]}
+      style={[estilos.chip, compacto && estilos.compacto, ativo && estilos.chipAtivo]}
     >
       <Text style={[estilos.texto, ativo && estilos.textoAtivo]}>{rotulo}</Text>
     </Pressable>
@@ -27,6 +29,11 @@ const estilos = StyleSheet.create({
     paddingHorizontal: espacos.sm + 4,
     paddingVertical: espacos.sm,
   },
+  compacto: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: espacos.xs,
+  },
   chipAtivo: {
     borderColor: cores.destaque,
     backgroundColor: cores.destaque,
@@ -34,6 +41,7 @@ const estilos = StyleSheet.create({
   texto: {
     color: cores.texto,
     fontSize: 13,
+    textAlign: 'center',
   },
   textoAtivo: {
     color: cores.textoSobreDestaque,

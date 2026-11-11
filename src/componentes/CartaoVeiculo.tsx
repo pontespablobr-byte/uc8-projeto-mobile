@@ -22,7 +22,8 @@ export function CartaoVeiculo({ veiculo, aoTocar }: CartaoVeiculoProps) {
             {veiculo.marca} · {formatarPlaca(veiculo.placa)}
           </Text>
         </View>
-        <BadgeStatus status={veiculo.status} />
+        {/* Na lista da frota todo veículo cadastrado aparece como ativo. */}
+        <BadgeStatus status="ativo" />
       </View>
 
       <View style={estilos.rodape}>

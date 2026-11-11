@@ -1,4 +1,5 @@
 import type {
+  Combustivel,
   Especialidade,
   Prioridade,
   StatusOrdemServico,
@@ -21,6 +22,14 @@ export const rotulosStatusOrdem: Record<StatusOrdemServico, string> = {
   em_andamento: 'Em andamento',
   concluida: 'Concluída',
   cancelada: 'Cancelada',
+};
+
+export const rotulosCombustivel: Record<Combustivel, string> = {
+  gasolina: 'Gasolina',
+  etanol: 'Etanol',
+  flex: 'Flex',
+  diesel: 'Diesel',
+  eletrico: 'Elétrico',
 };
 
 export const rotulosEspecialidade: Record<Especialidade, string> = {
