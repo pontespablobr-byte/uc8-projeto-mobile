@@ -1,10 +1,13 @@
+import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { descreverErro } from '../servicos/ordensServico';
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { registrarErro } from '../erros/erros';
+import type { FotoDaOrdem } from '../servicos/fotos';
 import { cores, espacos, raio } from '../tema/tema';
 import type { Mecanico, Prioridade, TipoManutencao, Veiculo } from '../types';
 import { formatarPlaca, formatarQuilometragem, lerValor } from '../utils/formatar';
 import { rotulosPrioridade, rotulosTipo } from '../utils/rotulos';
+import { Botao } from './Botao';
 import { Chip } from './Chip';
 
 export interface DadosNovaOrdem {
@@ -14,32 +17,83 @@ export interface DadosNovaOrdem {
   prioridade: Prioridade;
   descricao: string;
   custoEstimado: number;
+  foto: FotoDaOrdem | null;
 }
 
 interface FormularioOrdemServicoProps {
   veiculos: Veiculo[];
   mecanicos: Mecanico[];
   aoCriar: (dados: DadosNovaOrdem) => Promise<void>;
+  // Na edição, o formulário já começa preenchido com a ordem.
+  inicial?: DadosNovaOrdem;
+  textoBotao?: string;
+  // Nome da operação no registro de erros (cadastro ou edição).
+  origem?: string;
 }
 
 const tipos: TipoManutencao[] = ['preventiva', 'corretiva'];
 const prioridades: Prioridade[] = ['baixa', 'media', 'alta'];
 
+function custoComoTexto(valor: number): string {
+  return String(valor).replace('.', ',');
+}
+
 export function FormularioOrdemServico({
   veiculos,
   mecanicos,
   aoCriar,
+  inicial,
+  textoBotao = 'Abrir ordem de serviço',
+  origem = 'cadastro',
 }: FormularioOrdemServicoProps) {
-  const [veiculoId, setVeiculoId] = useState<string | null>(null);
-  const [mecanicoId, setMecanicoId] = useState<string | null>(null);
-  const [tipo, setTipo] = useState<TipoManutencao>('preventiva');
-  const [prioridade, setPrioridade] = useState<Prioridade>('media');
-  const [descricao, setDescricao] = useState('');
-  const [custo, setCusto] = useState('');
+  const [veiculoId, setVeiculoId] = useState<string | null>(inicial?.veiculoId ?? null);
+  const [mecanicoId, setMecanicoId] = useState<string | null>(inicial?.mecanicoId ?? null);
+  const [tipo, setTipo] = useState<TipoManutencao>(inicial?.tipo ?? 'preventiva');
+  const [prioridade, setPrioridade] = useState<Prioridade>(inicial?.prioridade ?? 'media');
+  const [descricao, setDescricao] = useState(inicial?.descricao ?? '');
+  const [custo, setCusto] = useState(inicial ? custoComoTexto(inicial.custoEstimado) : '');
+  const [foto, setFoto] = useState<FotoDaOrdem | null>(inicial?.foto ?? null);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
   const veiculoEscolhido = veiculos.find((veiculo) => veiculo.id === veiculoId);
+
+  async function escolherFoto(origem: 'camera' | 'galeria') {
+    setErro(null);
+    try {
+      if (origem === 'camera') {
+        const permissao = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permissao.granted) {
+          setErro('Permita o acesso à câmera para tirar a foto.');
+          return;
+        }
+      }
+      const opcoes: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images'],
+        quality: 0.5,
+        base64: true,
+      };
+      const resultado =
+        origem === 'camera'
+          ? await ImagePicker.launchCameraAsync(opcoes)
+          : await ImagePicker.launchImageLibraryAsync(opcoes);
+      if (resultado.canceled) return;
+
+      const imagem = resultado.assets[0];
+      if (!imagem.base64) {
+        setErro('Não foi possível ler a foto. Tente outra.');
+        return;
+      }
+      setFoto({
+        tipo: 'nova',
+        uri: imagem.uri,
+        base64: imagem.base64,
+        mimeType: imagem.mimeType === 'image/png' ? 'image/png' : 'image/jpeg',
+      });
+    } catch (falha: unknown) {
+      setErro(registrarErro('foto', falha).mensagem);
+    }
+  }
 
   async function tratarEnvio() {
     if (enviando) return;
@@ -72,10 +126,11 @@ export function FormularioOrdemServico({
         prioridade,
         descricao: descricao.trim(),
         custoEstimado,
+        foto,
       });
     } catch (falha: unknown) {
       // Mantém o que foi digitado para a pessoa poder tentar de novo.
-      setErro(descreverErro(falha));
+      setErro(registrarErro(origem, falha).mensagem);
       return;
     } finally {
       setEnviando(false);
@@ -88,6 +143,7 @@ export function FormularioOrdemServico({
     setPrioridade('media');
     setDescricao('');
     setCusto('');
+    setFoto(null);
   }
 
   return (
@@ -165,13 +221,46 @@ export function FormularioOrdemServico({
         keyboardType="numeric"
       />
 
+      <Text style={estilos.rotulo}>Foto (opcional)</Text>
+      {foto !== null && (
+        <View style={estilos.previa}>
+          <Image
+            source={{ uri: foto.tipo === 'nova' ? foto.uri : foto.url }}
+            style={estilos.imagem}
+            resizeMode="cover"
+            accessibilityLabel="Foto da ordem de serviço"
+          />
+          <Pressable onPress={() => setFoto(null)} style={estilos.remover}>
+            <Text style={estilos.textoRemover}>Remover foto</Text>
+          </Pressable>
+        </View>
+      )}
+      <View style={estilos.botoesFoto}>
+        <View style={estilos.botaoFoto}>
+          <Botao
+            titulo={foto ? 'Tirar outra foto' : 'Tirar foto'}
+            variante="secundario"
+            aoPressionar={() => escolherFoto('camera')}
+          />
+        </View>
+        <View style={estilos.botaoFoto}>
+          <Botao
+            titulo="Escolher da galeria"
+            variante="secundario"
+            aoPressionar={() => escolherFoto('galeria')}
+          />
+        </View>
+      </View>
+
       {erro !== null && <Text style={estilos.erro}>{erro}</Text>}
 
-      <Pressable style={estilos.botao} onPress={tratarEnvio} disabled={enviando}>
-        <Text style={estilos.textoBotao}>
-          {enviando ? 'Enviando...' : 'Abrir ordem de serviço'}
-        </Text>
-      </Pressable>
+      <View style={estilos.envio}>
+        <Botao
+          titulo={enviando ? 'Enviando...' : textoBotao}
+          aoPressionar={tratarEnvio}
+          desabilitado={enviando}
+        />
+      </View>
     </View>
   );
 }
@@ -207,20 +296,37 @@ const estilos = StyleSheet.create({
     minHeight: 88,
     textAlignVertical: 'top',
   },
+  previa: {
+    marginBottom: espacos.sm,
+  },
+  imagem: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: raio,
+    borderWidth: 1,
+    borderColor: cores.borda,
+    backgroundColor: cores.superficie,
+  },
+  remover: {
+    alignSelf: 'flex-start',
+    paddingVertical: espacos.sm,
+  },
+  textoRemover: {
+    color: cores.erro,
+    fontWeight: 'bold',
+  },
+  botoesFoto: {
+    flexDirection: 'row',
+    gap: espacos.sm,
+  },
+  botaoFoto: {
+    flex: 1,
+  },
   erro: {
     color: cores.erro,
     marginTop: espacos.md,
   },
-  botao: {
-    backgroundColor: cores.destaque,
-    borderRadius: raio,
-    paddingVertical: espacos.sm + 4,
-    alignItems: 'center',
+  envio: {
     marginTop: espacos.md,
-  },
-  textoBotao: {
-    color: cores.textoSobreDestaque,
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });

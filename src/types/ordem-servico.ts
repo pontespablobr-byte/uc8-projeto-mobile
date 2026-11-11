@@ -20,4 +20,5 @@ export type OrdemServico = {
   custoEstimado: number;
   dataAbertura: string;
   dataConclusao: string | null;
+  fotoUrl: string | null;
 };

@@ -1,3 +1,4 @@
+import { ErroDaApi, requisitar } from './api';
 import type {
   OrdemServico,
   Prioridade,
@@ -13,9 +14,25 @@ export interface DadosInclusaoOrdem {
   descricao: string;
   custoEstimado: number;
   quilometragemNoServico: number;
+  fotoUrl: string | null;
 }
 
-interface LinhaNovaOrdem {
+// Campos que a edição e a troca de status podem mudar; os ausentes ficam como estão.
+export interface AlteracoesOrdem {
+  veiculoId?: string;
+  mecanicoId?: string;
+  tipo?: TipoManutencao;
+  prioridade?: Prioridade;
+  descricao?: string;
+  custoEstimado?: number;
+  quilometragemNoServico?: number;
+  status?: StatusOrdemServico;
+  dataConclusao?: string | null;
+  fotoUrl?: string | null;
+}
+
+interface OrdemRemota {
+  id: number;
   veiculo_id: number;
   mecanico_id: number;
   tipo: TipoManutencao;
@@ -23,60 +40,15 @@ interface LinhaNovaOrdem {
   descricao: string;
   custo_estimado: number;
   quilometragem_no_servico: number;
-}
-
-interface OrdemRemota extends LinhaNovaOrdem {
-  id: number;
   status: StatusOrdemServico;
   data_abertura: string;
   data_conclusao: string | null;
+  foto_url?: string | null;
 }
 
 const TIPOS: readonly unknown[] = ['preventiva', 'corretiva'];
 const PRIORIDADES: readonly unknown[] = ['baixa', 'media', 'alta'];
 const STATUS: readonly unknown[] = ['aberta', 'em_andamento', 'concluida', 'cancelada'];
-
-export class ErroDaApi extends Error {
-  readonly status: number;
-
-  constructor(status: number, mensagem: string) {
-    super(mensagem);
-    this.name = 'ErroDaApi';
-    this.status = status;
-  }
-}
-
-export function descreverErro(erro: unknown): string {
-  if (erro instanceof ErroDaApi) {
-    return `A API respondeu ${erro.status}: ${erro.message}`;
-  }
-  if (erro instanceof Error) {
-    return erro.message;
-  }
-  return 'Erro desconhecido';
-}
-
-function ehMensagemDeErro(valor: unknown): valor is { message: string } {
-  return (
-    typeof valor === 'object' &&
-    valor !== null &&
-    typeof (valor as Record<string, unknown>).message === 'string'
-  );
-}
-
-async function lerMensagemDeErro(resposta: Response): Promise<string> {
-  const corpo: unknown = await resposta.json().catch(() => undefined);
-  return ehMensagemDeErro(corpo) ? corpo.message : 'sem detalhe no corpo da resposta';
-}
-
-function configuracao(): { url: string; chave: string } {
-  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const chave = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-  if (url === undefined || chave === undefined) {
-    throw new Error('Defina EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_KEY em .env.local');
-  }
-  return { url, chave };
-}
 
 function ehOrdemRemota(valor: unknown): valor is OrdemRemota {
   if (typeof valor !== 'object' || valor === null) {
@@ -94,7 +66,11 @@ function ehOrdemRemota(valor: unknown): valor is OrdemRemota {
     typeof campos.quilometragem_no_servico === 'number' &&
     typeof campos.custo_estimado === 'number' &&
     typeof campos.data_abertura === 'string' &&
-    (campos.data_conclusao === null || typeof campos.data_conclusao === 'string')
+    (campos.data_conclusao === null || typeof campos.data_conclusao === 'string') &&
+    // Antes do SQL de fotos a coluna não existe e o campo não vem.
+    (campos.foto_url === undefined ||
+      campos.foto_url === null ||
+      typeof campos.foto_url === 'string')
   );
 }
 
@@ -115,28 +91,25 @@ function paraOrdem(remota: OrdemRemota): OrdemServico {
     custoEstimado: remota.custo_estimado,
     dataAbertura: remota.data_abertura,
     dataConclusao: remota.data_conclusao,
+    fotoUrl: remota.foto_url ?? null,
   };
 }
 
-async function requisitar(
-  caminho: string,
-  metodo: 'GET' | 'POST' = 'GET',
-  corpo?: LinhaNovaOrdem,
-): Promise<unknown> {
-  const { url, chave } = configuracao();
-  const resposta = await fetch(`${url}/rest/v1/${caminho}`, {
-    method: metodo,
-    headers: {
-      apikey: chave,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
-    body: corpo === undefined ? undefined : JSON.stringify(corpo),
-  });
-  if (!resposta.ok) {
-    throw new ErroDaApi(resposta.status, await lerMensagemDeErro(resposta));
+function paraLinha(alteracoes: AlteracoesOrdem): Record<string, unknown> {
+  const linha: Record<string, unknown> = {};
+  if (alteracoes.veiculoId !== undefined) linha.veiculo_id = Number(alteracoes.veiculoId);
+  if (alteracoes.mecanicoId !== undefined) linha.mecanico_id = Number(alteracoes.mecanicoId);
+  if (alteracoes.tipo !== undefined) linha.tipo = alteracoes.tipo;
+  if (alteracoes.prioridade !== undefined) linha.prioridade = alteracoes.prioridade;
+  if (alteracoes.descricao !== undefined) linha.descricao = alteracoes.descricao;
+  if (alteracoes.custoEstimado !== undefined) linha.custo_estimado = alteracoes.custoEstimado;
+  if (alteracoes.quilometragemNoServico !== undefined) {
+    linha.quilometragem_no_servico = alteracoes.quilometragemNoServico;
   }
-  return resposta.json();
+  if (alteracoes.status !== undefined) linha.status = alteracoes.status;
+  if (alteracoes.dataConclusao !== undefined) linha.data_conclusao = alteracoes.dataConclusao;
+  if (alteracoes.fotoUrl !== undefined) linha.foto_url = alteracoes.fotoUrl;
+  return linha;
 }
 
 // Mais recentes primeiro, a mesma posição em que uma ordem nova entra na lista.
@@ -149,17 +122,52 @@ export async function carregarOrdens(): Promise<OrdemServico[]> {
 }
 
 export async function incluirOrdem(dados: DadosInclusaoOrdem): Promise<OrdemServico> {
-  const corpo = await requisitar('ordens_servico?select=*', 'POST', {
-    veiculo_id: Number(dados.veiculoId),
-    mecanico_id: Number(dados.mecanicoId),
-    tipo: dados.tipo,
-    prioridade: dados.prioridade,
-    descricao: dados.descricao,
-    custo_estimado: dados.custoEstimado,
-    quilometragem_no_servico: dados.quilometragemNoServico,
-  });
+  const { fotoUrl, ...resto } = dados;
+  // Sem foto, a coluna foto_url nem é enviada.
+  const linha = paraLinha(fotoUrl === null ? resto : dados);
+  const corpo = await requisitar('ordens_servico?select=*', 'POST', linha);
   if (!ehListaDeOrdens(corpo) || corpo.length !== 1) {
     throw new Error('Resposta inesperada da API');
+  }
+  return paraOrdem(corpo[0]);
+}
+
+// Só abertas e canceladas: a regra está no banco (supabase/exclusao.sql) e na tela.
+export async function excluirOrdem(id: string): Promise<void> {
+  const corpo = await requisitar(
+    `ordens_servico?id=eq.${encodeURIComponent(id)}&select=id`,
+    'DELETE',
+  );
+  if (!Array.isArray(corpo)) {
+    throw new Error('Resposta inesperada da API');
+  }
+  if (corpo.length !== 1) {
+    // Sem a política de exclusão, ou com a ordem em andamento/concluída, nada é apagado.
+    throw new ErroDaApi(
+      403,
+      'A ordem não foi excluída. Só ordens abertas ou canceladas podem ser excluídas; confira também se o arquivo supabase/exclusao.sql foi executado no Supabase.',
+    );
+  }
+}
+
+export async function atualizarOrdem(
+  id: string,
+  alteracoes: AlteracoesOrdem,
+): Promise<OrdemServico> {
+  const corpo = await requisitar(
+    `ordens_servico?id=eq.${encodeURIComponent(id)}&select=*`,
+    'PATCH',
+    paraLinha(alteracoes),
+  );
+  if (!ehListaDeOrdens(corpo)) {
+    throw new Error('Resposta inesperada da API');
+  }
+  if (corpo.length !== 1) {
+    // Com a RLS ligada e sem a política de alteração, a API devolve uma lista vazia.
+    throw new ErroDaApi(
+      403,
+      'A ordem não foi alterada. Confira se o arquivo supabase/edicao_e_fotos.sql foi executado no Supabase.',
+    );
   }
   return paraOrdem(corpo[0]);
 }
