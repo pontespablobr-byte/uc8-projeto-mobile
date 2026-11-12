@@ -22,16 +22,13 @@ export class ErroDoBanco extends Error {
   }
 }
 
-// O fetch avisa a falta de rede com textos diferentes em cada plataforma.
-const MENSAGENS_DE_REDE = [
-  'Network request failed',
-  'Failed to fetch',
-  'Load failed',
-  'fetch failed',
-  'NetworkError when attempting to fetch resource.',
-];
+const PARECE_FALTA_DE_REDE =
+  /network request failed|failed to fetch|fetch failed|load failed|networkerror|timed out|internet connection|could not connect|network connection was lost|não respondeu em/i;
 
-// Uma mensagem por código: cada recusa diz à pessoa o que conferir.
+function ehFaltaDeRede(erro: Error): boolean {
+  return erro.name === 'AbortError' || PARECE_FALTA_DE_REDE.test(erro.message);
+}
+
 function mensagemDaApi(erro: ErroDaApi): string {
   if (/permission denied/i.test(erro.message)) {
     return 'O Supabase não permite essa operação.';
@@ -68,7 +65,7 @@ export function classificarErro(erro: unknown): ErroClassificado {
       detalhe: `${erro.name}: ${erro.message}`,
     };
   }
-  if (erro instanceof TypeError && MENSAGENS_DE_REDE.includes(erro.message)) {
+  if (erro instanceof Error && ehFaltaDeRede(erro)) {
     return {
       tipo: 'rede',
       mensagem: 'Sem conexão com o servidor. Verifique a rede e tente de novo.',
@@ -81,9 +78,13 @@ export function classificarErro(erro: unknown): ErroClassificado {
   return { tipo: 'desconhecido', mensagem: 'Algo deu errado. Tente de novo.', detalhe: String(erro) };
 }
 
-// Um só lugar para registrar: o console recebe a origem e o detalhe; a tela, a mensagem.
 export function registrarErro(origem: string, erro: unknown): ErroClassificado {
   const classificado = classificarErro(erro);
-  console.error(`[${origem}] ${classificado.tipo}: ${classificado.detalhe}`);
+  const linha = `[${origem}] ${classificado.tipo}: ${classificado.detalhe}`;
+  if (classificado.tipo === 'rede' || classificado.tipo === 'validacao') {
+    console.log(linha);
+  } else {
+    console.error(linha);
+  }
   return classificado;
 }

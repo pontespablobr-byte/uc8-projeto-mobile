@@ -30,13 +30,36 @@ export function configuracao(): { url: string; chave: string } {
   return { url, chave };
 }
 
+const TEMPO_LIMITE_MS = 15000;
+
+export async function buscarComLimite(
+  endereco: string,
+  opcoes: RequestInit,
+  tempoLimiteMs: number = TEMPO_LIMITE_MS,
+): Promise<Response> {
+  const controle = new AbortController();
+  const relogio = setTimeout(() => controle.abort(), tempoLimiteMs);
+  try {
+    return await fetch(endereco, { ...opcoes, signal: controle.signal });
+  } catch (erro: unknown) {
+    if (controle.signal.aborted) {
+      throw new TypeError(
+        `Network request failed: o servidor não respondeu em ${tempoLimiteMs / 1000} segundos`,
+      );
+    }
+    throw erro;
+  } finally {
+    clearTimeout(relogio);
+  }
+}
+
 export async function requisitar(
   caminho: string,
   metodo: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
   corpo?: object,
 ): Promise<unknown> {
   const { url, chave } = configuracao();
-  const resposta = await fetch(`${url}/rest/v1/${caminho}`, {
+  const resposta = await buscarComLimite(`${url}/rest/v1/${caminho}`, {
     method: metodo,
     headers: {
       apikey: chave,
