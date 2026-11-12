@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { AvisoEstadoFrota } from '../componentes/AvisoEstadoFrota';
 import { Botao } from '../componentes/Botao';
 import { CartaoVeiculo } from '../componentes/CartaoVeiculo';
 import { Chip } from '../componentes/Chip';
 import { useFrota } from '../contexto/FrotaContexto';
-import { cores, espacos, raio } from '../tema/tema';
+import { cores, espacos, larguraLarga, raio } from '../tema/tema';
 
 interface TelaVeiculosProps {
   aoNovoVeiculo: () => void;
@@ -20,12 +20,13 @@ export function TelaVeiculos({ aoNovoVeiculo, aoNovoMecanico }: TelaVeiculosProp
   const { estado, recarregar } = useFrota();
   const [busca, setBusca] = useState('');
   const [marcaEscolhida, setMarcaEscolhida] = useState<string | null>(null);
+  const { width } = useWindowDimensions();
+  const duasColunas = width >= larguraLarga;
 
   if (estado.tipo !== 'pronto') {
     return <AvisoEstadoFrota estado={estado} aoTentarDeNovo={recarregar} />;
   }
 
-  // Quantidade por marca; "fiat" e "Fiat" contam juntas.
   const porMarca = new Map<string, { nome: string; quantidade: number }>();
   for (const veiculo of estado.veiculos) {
     const chave = veiculo.marca.trim().toLowerCase();
@@ -94,10 +95,17 @@ export function TelaVeiculos({ aoNovoVeiculo, aoNovoMecanico }: TelaVeiculosProp
         </Text>
       )}
       <FlatList
+        key={duasColunas ? 'duas' : 'uma'}
         ListHeaderComponent={resumo}
         data={filtrados}
+        numColumns={duasColunas ? 2 : 1}
+        columnWrapperStyle={duasColunas ? estilos.linhaDeColunas : undefined}
         keyExtractor={(veiculo) => veiculo.id}
-        renderItem={({ item }) => <CartaoVeiculo veiculo={item} />}
+        renderItem={({ item }) => (
+          <View style={duasColunas ? estilos.celula : undefined}>
+            <CartaoVeiculo veiculo={item} />
+          </View>
+        )}
         ListEmptyComponent={
           <Text style={estilos.vazio}>Nenhum veículo encontrado.</Text>
         }
@@ -154,6 +162,12 @@ const estilos = StyleSheet.create({
   },
   lista: {
     paddingBottom: espacos.lg,
+  },
+  linhaDeColunas: {
+    justifyContent: 'space-between',
+  },
+  celula: {
+    width: '49%',
   },
   vazio: {
     color: cores.textoSecundario,

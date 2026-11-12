@@ -31,6 +31,8 @@ export function TelaNovoMecanico({ aoVoltar }: TelaNovoMecanicoProps) {
   const [telefone, setTelefone] = useState('');
   const [especialidade, setEspecialidade] = useState<Especialidade>('geral');
   const [erro, setErro] = useState<string | null>(null);
+  const [erroNome, setErroNome] = useState<string | undefined>(undefined);
+  const [erroTelefone, setErroTelefone] = useState<string | undefined>(undefined);
   const [enviando, setEnviando] = useState(false);
 
   if (estado.tipo !== 'pronto') {
@@ -41,17 +43,19 @@ export function TelaNovoMecanico({ aoVoltar }: TelaNovoMecanicoProps) {
     if (enviando) return;
 
     const digitos = telefone.replace(/\D/g, '');
+    setErro(null);
+    setErroNome(undefined);
+    setErroTelefone(undefined);
 
     if (nome.trim() === '') {
-      setErro('Informe o nome do mecânico.');
+      setErroNome('Informe o nome do mecânico.');
       return;
     }
     if (digitos.length < 10) {
-      setErro('Informe o telefone com DDD, como (84) 98888-7777.');
+      setErroTelefone('Informe o telefone com DDD, como (84) 98888-7777.');
       return;
     }
 
-    setErro(null);
     setEnviando(true);
     try {
       await incluirMecanico({ nome: nome.trim(), telefone: digitos, especialidade });
@@ -77,13 +81,20 @@ export function TelaNovoMecanico({ aoVoltar }: TelaNovoMecanicoProps) {
         </Pressable>
         <Text style={estilos.titulo}>Novo mecânico</Text>
 
-        <Campo rotulo="Nome" value={nome} onChangeText={setNome} placeholder="Ex: Carlos Silva" />
+        <Campo
+          rotulo="Nome"
+          value={nome}
+          onChangeText={setNome}
+          placeholder="Ex: Carlos Silva"
+          erro={erroNome}
+        />
         <Campo
           rotulo="Telefone"
           value={telefone}
           onChangeText={(texto) => setTelefone(formatarTelefone(texto))}
           placeholder="Ex: (84) 98888-7777"
           keyboardType="phone-pad"
+          erro={erroTelefone}
         />
 
         <Text style={estilos.rotulo}>Especialidade</Text>

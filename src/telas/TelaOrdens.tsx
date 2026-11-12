@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { AvisoEstadoFrota } from '../componentes/AvisoEstadoFrota';
 import { Botao } from '../componentes/Botao';
 import { CartaoOrdemServico } from '../componentes/CartaoOrdemServico';
@@ -8,7 +8,7 @@ import { ConfirmarExclusao } from '../componentes/ConfirmarExclusao';
 import { useFrota } from '../contexto/FrotaContexto';
 import { registrarErro } from '../erros/erros';
 import { gerarPdfDaOrdem } from '../servicos/pdf';
-import { cores, espacos } from '../tema/tema';
+import { cores, espacos, larguraLarga } from '../tema/tema';
 import type { OrdemServico, StatusOrdemServico } from '../types';
 
 interface TelaOrdensProps {
@@ -32,6 +32,8 @@ export function TelaOrdens({ aoSelecionarOrdem }: TelaOrdensProps) {
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
   const [excluindo, setExcluindo] = useState(false);
   const [erroPdf, setErroPdf] = useState<string | null>(null);
+  const { width } = useWindowDimensions();
+  const duasColunas = width >= larguraLarga;
 
   if (estado.tipo !== 'pronto') {
     return <AvisoEstadoFrota estado={estado} aoTentarDeNovo={recarregar} />;
@@ -39,14 +41,11 @@ export function TelaOrdens({ aoSelecionarOrdem }: TelaOrdensProps) {
 
   const { ordens, veiculos, mecanicos } = estado;
 
-  // O filtro já devolve um array novo; a ordenação (id decrescente) age nele.
   const visiveis = ordens
     .filter((ordem) => filtroStatus === 'todas' || ordem.status === filtroStatus)
     .sort((a, b) => Number(b.id) - Number(a.id));
 
-  // O PDF só é oferecido na aba Concluída.
   const mostrarPdf = filtroStatus === 'concluida';
-  // A exclusão só é oferecida nas abas Aberta e Cancelada.
   const mostrarExcluir = filtroStatus === 'aberta' || filtroStatus === 'cancelada';
 
   async function excluir(ordem: OrdemServico) {
@@ -118,10 +117,18 @@ export function TelaOrdens({ aoSelecionarOrdem }: TelaOrdensProps) {
       {erroPdf !== null && <Text style={estilos.erro}>{erroPdf}</Text>}
 
       <FlatList
+        key={duasColunas ? 'duas' : 'uma'}
         data={visiveis}
+        numColumns={duasColunas ? 2 : 1}
+        columnWrapperStyle={duasColunas ? estilos.linhaDeColunas : undefined}
         keyExtractor={(ordem) => ordem.id}
         renderItem={({ item }) => (
-          <View style={mostrarPdf || mostrarExcluir ? estilos.itemComAcao : undefined}>
+          <View
+            style={[
+              (mostrarPdf || mostrarExcluir) && estilos.itemComAcao,
+              duasColunas && estilos.celulaDaLista,
+            ]}
+          >
             <CartaoOrdemServico
               ordem={item}
               veiculo={veiculos.find((veiculo) => veiculo.id === item.veiculoId)}
@@ -187,6 +194,12 @@ const estilos = StyleSheet.create({
   aviso: {
     color: cores.destaque,
     marginBottom: espacos.sm,
+  },
+  linhaDeColunas: {
+    justifyContent: 'space-between',
+  },
+  celulaDaLista: {
+    width: '49%',
   },
   itemComAcao: {
     marginBottom: espacos.md,

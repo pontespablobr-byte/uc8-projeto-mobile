@@ -27,6 +27,8 @@ const combustiveis: Combustivel[] = ['flex', 'gasolina', 'etanol', 'diesel', 'el
 const placaValida = /^[A-Z]{3}-\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$/;
 const quilometragemMaxima = 9999999;
 
+type CampoDoVeiculo = 'placa' | 'marca' | 'modelo' | 'ano' | 'quilometragem' | 'proximaRevisao';
+
 export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
   const { estado, recarregar, incluirVeiculo } = useFrota();
   const [placa, setPlaca] = useState('');
@@ -37,6 +39,9 @@ export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
   const [quilometragem, setQuilometragem] = useState('');
   const [proximaRevisao, setProximaRevisao] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const [erroCampo, setErroCampo] = useState<{ campo: CampoDoVeiculo; mensagem: string } | null>(
+    null,
+  );
   const [enviando, setEnviando] = useState(false);
 
   if (estado.tipo !== 'pronto') {
@@ -44,6 +49,15 @@ export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
   }
 
   const { veiculos } = estado;
+
+  function erroDe(campo: CampoDoVeiculo): string | undefined {
+    return erroCampo?.campo === campo ? erroCampo.mensagem : undefined;
+  }
+
+  function falhar(campo: CampoDoVeiculo, mensagem: string) {
+    setErro(null);
+    setErroCampo({ campo, mensagem });
+  }
 
   async function salvar() {
     if (enviando) return;
@@ -54,39 +68,40 @@ export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
     const anoMaximo = new Date().getFullYear() + 1;
 
     if (!placaValida.test(placa)) {
-      setErro('Informe uma placa válida, como ABC-1234 ou ABC1D23.');
+      falhar('placa', 'Informe uma placa válida, como ABC-1234 ou ABC1D23.');
       return;
     }
     if (veiculos.some((veiculo) => formatarPlaca(veiculo.placa) === placa)) {
-      setErro('Já existe um veículo com essa placa.');
+      falhar('placa', 'Já existe um veículo com essa placa.');
       return;
     }
     if (marca.trim() === '') {
-      setErro('Informe a marca.');
+      falhar('marca', 'Informe a marca.');
       return;
     }
     if (modelo.trim() === '') {
-      setErro('Informe o modelo.');
+      falhar('modelo', 'Informe o modelo.');
       return;
     }
     if (anoFabricacao === null || anoFabricacao < 1950 || anoFabricacao > anoMaximo) {
-      setErro(`Informe um ano de fabricação entre 1950 e ${anoMaximo}.`);
+      falhar('ano', `Informe um ano de fabricação entre 1950 e ${anoMaximo}.`);
       return;
     }
     if (km === null || km > quilometragemMaxima) {
-      setErro('Informe uma quilometragem válida, como 85000.');
+      falhar('quilometragem', 'Informe uma quilometragem válida, como 85000.');
       return;
     }
     if (proximaRevisaoKm === null || proximaRevisaoKm > quilometragemMaxima) {
-      setErro('Informe a quilometragem da próxima revisão, como 90000.');
+      falhar('proximaRevisao', 'Informe a quilometragem da próxima revisão, como 90000.');
       return;
     }
     if (proximaRevisaoKm <= km) {
-      setErro('A próxima revisão precisa ser maior que a quilometragem atual.');
+      falhar('proximaRevisao', 'A próxima revisão precisa ser maior que a quilometragem atual.');
       return;
     }
 
     setErro(null);
+    setErroCampo(null);
     setEnviando(true);
     try {
       await incluirVeiculo({
@@ -127,9 +142,22 @@ export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
           placeholder="Ex: ABC-1234"
           autoCapitalize="characters"
           autoCorrect={false}
+          erro={erroDe('placa')}
         />
-        <Campo rotulo="Marca" value={marca} onChangeText={setMarca} placeholder="Ex: Fiat" />
-        <Campo rotulo="Modelo" value={modelo} onChangeText={setModelo} placeholder="Ex: Strada" />
+        <Campo
+          rotulo="Marca"
+          value={marca}
+          onChangeText={setMarca}
+          placeholder="Ex: Fiat"
+          erro={erroDe('marca')}
+        />
+        <Campo
+          rotulo="Modelo"
+          value={modelo}
+          onChangeText={setModelo}
+          placeholder="Ex: Strada"
+          erro={erroDe('modelo')}
+        />
         <Campo
           rotulo="Ano de fabricação"
           value={ano}
@@ -137,6 +165,7 @@ export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
           placeholder="Ex: 2021"
           keyboardType="numeric"
           maxLength={4}
+          erro={erroDe('ano')}
         />
 
         <Text style={estilos.rotulo}>Combustível</Text>
@@ -157,6 +186,7 @@ export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
           onChangeText={setQuilometragem}
           placeholder="Ex: 85000"
           keyboardType="numeric"
+          erro={erroDe('quilometragem')}
         />
         <Campo
           rotulo="Próxima revisão (km)"
@@ -164,6 +194,7 @@ export function TelaNovoVeiculo({ aoVoltar }: TelaNovoVeiculoProps) {
           onChangeText={setProximaRevisao}
           placeholder="Ex: 90000"
           keyboardType="numeric"
+          erro={erroDe('proximaRevisao')}
         />
 
         {erro !== null && <Text style={estilos.erro}>{erro}</Text>}

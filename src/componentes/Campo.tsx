@@ -3,17 +3,29 @@ import { cores, espacos, raio } from '../tema/tema';
 
 interface CampoProps extends TextInputProps {
   rotulo: string;
+  erro?: string;
 }
 
-export function Campo({ rotulo, style, ...resto }: CampoProps) {
+export function Campo({ rotulo, erro, style, editable, ...resto }: CampoProps) {
+  const desabilitado = editable === false;
+
   return (
     <View>
       <Text style={estilos.rotulo}>{rotulo}</Text>
       <TextInput
-        style={[estilos.campo, style]}
+        style={[
+          estilos.campo,
+          erro !== undefined && estilos.campoComErro,
+          desabilitado && estilos.campoDesabilitado,
+          style,
+        ]}
         placeholderTextColor={cores.textoSecundario}
+        editable={editable}
+        accessibilityLabel={rotulo}
+        accessibilityHint={erro}
         {...resto}
       />
+      {erro !== undefined && <Text style={estilos.erro}>{erro}</Text>}
     </View>
   );
 }
@@ -34,5 +46,16 @@ const estilos = StyleSheet.create({
     color: cores.texto,
     borderRadius: raio,
     padding: espacos.sm + 4,
+  },
+  campoComErro: {
+    borderColor: cores.erro,
+  },
+  campoDesabilitado: {
+    opacity: 0.5,
+  },
+  erro: {
+    color: cores.erro,
+    fontSize: 13,
+    marginTop: espacos.xs,
   },
 });
