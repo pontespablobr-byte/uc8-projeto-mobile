@@ -24,6 +24,7 @@ import {
 import { sincronizarPendentes } from '../servicos/sincronizacao';
 import {
   carregarVeiculos,
+  excluirVeiculo as apagarVeiculo,
   incluirVeiculo as enviarVeiculo,
   type DadosNovoVeiculo,
 } from '../servicos/veiculos';
@@ -69,6 +70,24 @@ interface ValorDaFrota {
   atualizarStatus: (id: string, status: StatusOrdemServico) => Promise<void>;
   editarOrdem: (id: string, alteracoes: AlteracoesOrdem) => Promise<OrdemServico>;
   excluirOrdem: (id: string) => Promise<void>;
+  excluirVeiculo: (id: string) => Promise<void>;
+}
+
+export function motivoParaNaoExcluirVeiculo(
+  veiculo: Veiculo,
+  ordens: OrdemServico[],
+  pendentes: Pendente[],
+): string | null {
+  const quantidade = ordens.filter((ordem) => ordem.veiculoId === veiculo.id).length;
+  if (quantidade > 0) {
+    return `O veículo ${veiculo.modelo} tem ${quantidade} ${
+      quantidade === 1 ? 'ordem' : 'ordens'
+    } de serviço e não pode ser excluído.`;
+  }
+  if (pendentes.some((pendente) => pendente.veiculoId === veiculo.id)) {
+    return `O veículo ${veiculo.modelo} tem uma ordem esperando envio e não pode ser excluído.`;
+  }
+  return null;
 }
 
 const FrotaContexto = createContext<ValorDaFrota | undefined>(undefined);
@@ -263,6 +282,25 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
     return atualizada;
   }
 
+  async function excluirVeiculo(id: string): Promise<void> {
+    const { veiculos, ordens, pendentes } = dadosProntos();
+    const veiculo = veiculos.find((item) => item.id === id);
+    if (veiculo === undefined) {
+      throw new ErroDeValidacao('Veículo não encontrado.');
+    }
+    const motivo = motivoParaNaoExcluirVeiculo(veiculo, ordens, pendentes);
+    if (motivo !== null) {
+      throw new ErroDeValidacao(motivo);
+    }
+
+    await apagarVeiculo(id);
+    setEstado((atual) =>
+      atual.tipo === 'pronto'
+        ? { ...atual, veiculos: atual.veiculos.filter((item) => item.id !== id) }
+        : atual,
+    );
+  }
+
   async function excluirOrdem(id: string): Promise<void> {
     const ordem = dadosProntos().ordens.find((item) => item.id === id);
     if (ordem === undefined || (ordem.status !== 'aberta' && ordem.status !== 'cancelada')) {
@@ -295,6 +333,7 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
         atualizarStatus,
         editarOrdem,
         excluirOrdem,
+        excluirVeiculo,
       }}
     >
       {children}

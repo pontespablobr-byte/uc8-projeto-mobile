@@ -7,7 +7,7 @@ import { registrarErro } from '../erros/erros';
 import { cores, espacos, raio } from '../tema/tema';
 
 const funcoes = [
-  'Cadastrar veículos e mecânicos, com a quantidade de carros por marca.',
+  'Cadastrar veículos e mecânicos, com a quantidade de carros por marca, e excluir veículos sem ordens.',
   'Abrir ordens de serviço preventivas e corretivas, com foto do veículo.',
   'Acompanhar, editar e mudar o status de cada ordem, e excluir as abertas ou canceladas.',
   'Gerar o PDF das ordens concluídas para enviar ou imprimir.',
@@ -90,7 +90,7 @@ export function TelaSobre() {
         <Text style={estilos.tituloSecao}>Seus dados</Text>
         <Text style={estilos.item}>
           Os dados ficam no Supabase, protegidos por regras de acesso: o app pode ler, incluir
-          e alterar, e só pode excluir ordens de serviço abertas ou canceladas. Uma cópia fica
+          e alterar, e só pode excluir ordens de serviço abertas ou canceladas e veículos sem ordens. Uma cópia fica
           no aparelho para quando não houver rede, e a ordem aberta sem rede é enviada na
           próxima vez que o app abrir conectado. Use apenas dados fictícios nos testes e não
           fotografe pessoas nem documentos.

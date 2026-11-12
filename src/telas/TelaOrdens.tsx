@@ -146,7 +146,7 @@ export function TelaOrdens({ aoSelecionarOrdem }: TelaOrdensProps) {
             {mostrarExcluir &&
               (confirmandoId === item.id ? (
                 <ConfirmarExclusao
-                  ordemId={item.id}
+                  pergunta={`Excluir a OS #${item.id}?`}
                   excluindo={excluindo}
                   aoConfirmar={() => excluir(item)}
                   aoCancelar={() => setConfirmandoId(null)}

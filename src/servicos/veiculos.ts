@@ -1,4 +1,4 @@
-import { requisitar } from './api';
+import { ErroDaApi, requisitar } from './api';
 import type { Combustivel, StatusVeiculo, Veiculo } from '../types';
 
 export interface DadosNovoVeiculo {
@@ -88,4 +88,17 @@ export async function incluirVeiculo(dados: DadosNovoVeiculo): Promise<Veiculo> 
     throw new Error('Resposta inesperada da API');
   }
   return paraVeiculo(corpo[0]);
+}
+
+export async function excluirVeiculo(id: string): Promise<void> {
+  const corpo = await requisitar(`veiculos?id=eq.${encodeURIComponent(id)}&select=id`, 'DELETE');
+  if (!Array.isArray(corpo)) {
+    throw new Error('Resposta inesperada da API');
+  }
+  if (corpo.length !== 1) {
+    throw new ErroDaApi(
+      403,
+      'O veículo não foi excluído. Só veículos sem ordens de serviço podem ser excluídos; confira também se o arquivo supabase/exclusao_veiculos.sql foi executado no Supabase.',
+    );
+  }
 }

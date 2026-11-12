@@ -51,7 +51,7 @@ O app é voltado ao **mecânico/gestor de frota em campo**: consultar veículos,
 
 ### Telas (barra de abas embaixo)
 
-1. **Veículos**: busca por placa/modelo, quantidade por marca e cadastro de veículos e mecânicos.
+1. **Veículos**: busca por placa/modelo, quantidade por marca, cadastro de veículos e mecânicos e exclusão de veículos sem ordens.
 2. **Ordens**: filtro por status; PDF na aba Concluída; exclusão nas abas Aberta e Cancelada.
 3. **Detalhe da ordem de serviço**: foto, edição, troca de status, PDF (concluída) e exclusão (aberta ou cancelada).
 4. **Nova OS**: veículo, mecânico, tipo, prioridade, descrição, custo e foto (câmera ou galeria).
@@ -92,7 +92,8 @@ As tabelas são criadas no SQL Editor do projeto, executando uma vez cada arquiv
 2. `supabase/esquema_frota.sql`: tabelas `veiculos` e `mecanicos`.
 3. `supabase/edicao_e_fotos.sql`: edição das ordens e pasta `fotos-os` para as fotos.
 4. `supabase/exclusao.sql`: exclusão só de ordens abertas ou canceladas.
-5. `supabase/endurecimento.sql`: o app não altera nem apaga veículos e mecânicos (`revoke`).
+5. `supabase/endurecimento.sql`: o app não altera veículos e mecânicos nem apaga mecânicos (`revoke`).
+6. `supabase/exclusao_veiculos.sql`: exclusão só de veículos sem ordens de serviço.
 
 ## Como rodar
 

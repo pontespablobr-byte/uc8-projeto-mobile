@@ -164,7 +164,7 @@ export function TelaDetalheOrdem({ ordemId, aoVoltar, aoEditar }: TelaDetalheOrd
       {podeExcluir && confirmando && (
         <View style={estilos.confirmacao}>
           <ConfirmarExclusao
-            ordemId={ordem.id}
+            pergunta={`Excluir a OS #${ordem.id}?`}
             excluindo={excluindo}
             aoConfirmar={excluir}
             aoCancelar={() => setConfirmando(false)}

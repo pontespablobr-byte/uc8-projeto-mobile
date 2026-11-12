@@ -4,7 +4,11 @@ import { AvisoEstadoFrota } from '../componentes/AvisoEstadoFrota';
 import { Botao } from '../componentes/Botao';
 import { CartaoVeiculo } from '../componentes/CartaoVeiculo';
 import { Chip } from '../componentes/Chip';
-import { useFrota } from '../contexto/FrotaContexto';
+import { ConfirmarExclusao } from '../componentes/ConfirmarExclusao';
+import { motivoParaNaoExcluirVeiculo, useFrota } from '../contexto/FrotaContexto';
+import { registrarErro } from '../erros/erros';
+import type { Veiculo } from '../types';
+import { formatarPlaca } from '../utils/formatar';
 import { cores, espacos, larguraLarga, raio } from '../tema/tema';
 
 interface TelaVeiculosProps {
@@ -17,7 +21,10 @@ function semSeparadores(texto: string): string {
 }
 
 export function TelaVeiculos({ aoNovoVeiculo, aoNovoMecanico }: TelaVeiculosProps) {
-  const { estado, recarregar } = useFrota();
+  const { estado, recarregar, excluirVeiculo } = useFrota();
+  const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExclusao, setErroExclusao] = useState<{ id: string; mensagem: string } | null>(null);
   const [busca, setBusca] = useState('');
   const [marcaEscolhida, setMarcaEscolhida] = useState<string | null>(null);
   const { width } = useWindowDimensions();
@@ -47,6 +54,33 @@ export function TelaVeiculos({ aoNovoVeiculo, aoNovoMecanico }: TelaVeiculosProp
       (semSeparadores(veiculo.placa).includes(termo) ||
         semSeparadores(veiculo.modelo).includes(termo)),
   );
+
+  const { ordens, pendentes } = estado;
+
+  function pedirExclusao(veiculo: Veiculo) {
+    const motivo = motivoParaNaoExcluirVeiculo(veiculo, ordens, pendentes);
+    if (motivo !== null) {
+      setConfirmandoId(null);
+      setErroExclusao({ id: veiculo.id, mensagem: motivo });
+      return;
+    }
+    setErroExclusao(null);
+    setConfirmandoId(veiculo.id);
+  }
+
+  async function excluir(veiculo: Veiculo) {
+    if (excluindo) return;
+    setExcluindo(true);
+    try {
+      await excluirVeiculo(veiculo.id);
+      setConfirmandoId(null);
+    } catch (falha: unknown) {
+      setConfirmandoId(null);
+      setErroExclusao({ id: veiculo.id, mensagem: registrarErro('exclusao de veiculo', falha).mensagem });
+    } finally {
+      setExcluindo(false);
+    }
+  }
 
   const resumo = (
     <View style={estilos.resumo}>
@@ -103,7 +137,24 @@ export function TelaVeiculos({ aoNovoVeiculo, aoNovoMecanico }: TelaVeiculosProp
         keyExtractor={(veiculo) => veiculo.id}
         renderItem={({ item }) => (
           <View style={duasColunas ? estilos.celula : undefined}>
-            <CartaoVeiculo veiculo={item} />
+            <CartaoVeiculo
+              veiculo={item}
+              aoExcluir={() => pedirExclusao(item)}
+              exclusaoDesabilitada={excluindo}
+            />
+            {confirmandoId === item.id && (
+              <View style={estilos.abaixoDoCartao}>
+                <ConfirmarExclusao
+                  pergunta={`Excluir o veículo ${item.modelo} (${formatarPlaca(item.placa)})?`}
+                  excluindo={excluindo}
+                  aoConfirmar={() => excluir(item)}
+                  aoCancelar={() => setConfirmandoId(null)}
+                />
+              </View>
+            )}
+            {erroExclusao?.id === item.id && (
+              <Text style={[estilos.erro, estilos.abaixoDoCartao]}>{erroExclusao.mensagem}</Text>
+            )}
           </View>
         )}
         ListEmptyComponent={
@@ -162,6 +213,12 @@ const estilos = StyleSheet.create({
   },
   lista: {
     paddingBottom: espacos.lg,
+  },
+  abaixoDoCartao: {
+    marginBottom: espacos.md,
+  },
+  erro: {
+    color: cores.erro,
   },
   linhaDeColunas: {
     justifyContent: 'space-between',

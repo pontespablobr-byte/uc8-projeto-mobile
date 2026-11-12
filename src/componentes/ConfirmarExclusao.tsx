@@ -3,21 +3,21 @@ import { cores, espacos, raio } from '../tema/tema';
 import { Botao } from './Botao';
 
 interface ConfirmarExclusaoProps {
-  ordemId: string;
+  pergunta: string;
   excluindo: boolean;
   aoConfirmar: () => void;
   aoCancelar: () => void;
 }
 
 export function ConfirmarExclusao({
-  ordemId,
+  pergunta,
   excluindo,
   aoConfirmar,
   aoCancelar,
 }: ConfirmarExclusaoProps) {
   return (
     <View style={estilos.caixa}>
-      <Text style={estilos.pergunta}>Excluir a OS #{ordemId}?</Text>
+      <Text style={estilos.pergunta}>{pergunta}</Text>
       <Text style={estilos.aviso}>Essa ação não pode ser desfeita.</Text>
       <View style={estilos.botoes}>
         <View style={estilos.botao}>

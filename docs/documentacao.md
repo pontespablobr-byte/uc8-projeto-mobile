@@ -39,7 +39,7 @@ A navegação é feita por uma barra de abas na parte de baixo da tela, com íco
 
 | Aba | O que faz |
 |---|---|
-| **Veículos** | Lista todos os veículos com placa, quilometragem e próxima revisão. Busca por placa ou modelo. Mostra a quantidade de veículos por marca; tocar numa marca filtra a lista. Botões **+ Novo veículo** e **+ Novo mecânico**. |
+| **Veículos** | Lista todos os veículos com placa, quilometragem e próxima revisão. Busca por placa ou modelo. Mostra a quantidade de veículos por marca; tocar numa marca filtra a lista. Botões **+ Novo veículo** e **+ Novo mecânico**. Cada cartão tem o link **Excluir** (ícone de lixeira, no canto de baixo), com confirmação. |
 | **Ordens** | Lista as OS, da mais recente para a mais antiga, com filtro por status (Todas, Aberta, Em andamento, Concluída, Cancelada). No filtro **Concluída**, cada OS tem **Gerar PDF**. Nos filtros **Aberta** e **Cancelada**, cada OS tem **Excluir**, com confirmação. |
 | **Detalhe da OS** | Abre ao tocar numa OS. Mostra veículo, mecânico, serviço, datas e foto. Permite **editar**, **mudar o status**, **gerar o PDF** (só concluída) e **excluir** (só aberta ou cancelada). |
 | **Nova OS** | Formulário com veículo, mecânico, tipo, prioridade, descrição, custo estimado e foto opcional, pela câmera ou pela galeria. A quilometragem do serviço é a do veículo naquele momento. |
@@ -54,6 +54,7 @@ A navegação é feita por uma barra de abas na parte de baixo da tela, com íco
 - O custo aceita `350`, `350,50`, `350.50`, `1.234` e `1.234,50`, até R$ 99.999.999,99.
 - Ao concluir uma OS, a data de conclusão é preenchida; ao mudar para outro status, ela é apagada.
 - Só OS **abertas** ou **canceladas** podem ser excluídas. O PDF só é gerado para OS **concluídas**.
+- Só é possível excluir um veículo **sem nenhuma ordem de serviço**, nem ordem esperando envio no aparelho. Se ele tiver ordens, o app mostra quantas e não oferece a confirmação; assim nenhuma OS fica sem veículo.
 - O valor dos relatórios é o **custo estimado** de cada OS concluída.
 
 ## 3. Tecnologias
@@ -165,6 +166,7 @@ No aplicativo, os campos usam `camelCase` (`veiculoId`, `custoEstimado`); no ban
 | Tabela ou pasta | Criada por |
 |---|---|
 | `ordens_servico` | `supabase/esquema.sql` |
+| permissões (`revoke` e exclusão de veículos sem ordens) | `supabase/endurecimento.sql` e `supabase/exclusao_veiculos.sql` |
 | `veiculos` e `mecanicos` | `supabase/esquema_frota.sql` |
 | coluna `foto_url` e pasta `fotos-os` no Storage (até 5 MB, só imagens) | `supabase/edicao_e_fotos.sql` |
 
@@ -218,12 +220,12 @@ O app monta um documento HTML com a OS, o veículo, o mecânico, os valores, a f
 
 | Tabela | Ler | Incluir | Alterar | Excluir |
 |---|---|---|---|---|
-| `veiculos` | sim | sim | não (`revoke`) | não (`revoke`) |
+| `veiculos` | sim | sim | não (`revoke`) | só sem ordens de serviço |
 | `mecanicos` | sim | sim | não (`revoke`) | não (`revoke`) |
 | `ordens_servico` | sim | sim | sim (edição e status) | só abertas ou canceladas |
 | Storage `fotos-os` | sim (pasta pública) | sim (até 5 MB, só imagens) | não | não |
 
-- `supabase/endurecimento.sql` retira de veículos e mecânicos o privilégio de alterar e apagar, e a API passa a recusar com o código **42501**. Nas ordens, alterar e excluir continuam permitidos porque são funções do app, limitados pelas políticas de `edicao_e_fotos.sql` e `exclusao.sql`.
+- `supabase/endurecimento.sql` retira de veículos o privilégio de alterar e de mecânicos o de alterar e apagar, e a API passa a recusar com o código **42501**. Excluir veículo e alterar ou excluir ordens continuam permitidos porque são funções do app, limitados pelas políticas de `exclusao_veiculos.sql`, `edicao_e_fotos.sql` e `exclusao.sql`.
 - Todo texto digitado é escapado antes de entrar no HTML do PDF.
 - **Dados pessoais (LGPD):** o projeto usa apenas dados fictícios. As fotos ficam numa pasta pública, então não se deve fotografar pessoas nem documentos.
 
@@ -259,6 +261,7 @@ Falta de rede e dado inválido são esperados e vão para `console.log`; os dema
    3. `supabase/edicao_e_fotos.sql`
    4. `supabase/exclusao.sql`
    5. `supabase/endurecimento.sql`
+   6. `supabase/exclusao_veiculos.sql`
 4. Suba o servidor e leia o QR Code com o Expo Go:
    ```bash
    npx expo start
