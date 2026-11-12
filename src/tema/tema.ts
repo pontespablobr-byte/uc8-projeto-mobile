@@ -1,5 +1,3 @@
-// Tema escuro do app, portado do style.css do projeto desktop (preto e amarelo,
-// identidade de oficina). Cada valor fica num único lugar, com nome.
 
 export const cores = {
   fundo: '#0A0A0A',

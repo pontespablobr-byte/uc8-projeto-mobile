@@ -25,7 +25,6 @@ export function TelaSobre() {
   const { estado } = useFrota();
   const [guardados, setGuardados] = useState('...');
 
-  // A contagem vem do banco do aparelho; se ele falhar, a tela continua.
   useEffect(() => {
     let cancelado = false;
     contarLocal()
@@ -47,7 +46,6 @@ export function TelaSobre() {
     };
   }, [estado]);
 
-  // Os números aparecem só depois que a frota carrega.
   const contagens =
     estado.tipo === 'pronto'
       ? [

@@ -6,7 +6,6 @@ type Variante = 'primario' | 'secundario' | 'perigo' | 'perigoForte';
 interface BotaoProps {
   titulo: string;
   aoPressionar: () => void;
-  // perigo: contorno vermelho, para oferecer a ação; perigoForte: vermelho cheio, para confirmar.
   variante?: Variante;
   desabilitado?: boolean;
 }

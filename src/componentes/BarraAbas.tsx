@@ -19,7 +19,6 @@ const abas: { chave: Aba; rotulo: string }[] = [
   { chave: 'sobre', rotulo: 'Sobre' },
 ];
 
-// Ícones em traço, desenhados num quadro de 24 x 24.
 function IconeAba({ aba, cor }: { aba: Aba; cor: string }) {
   const traco = { stroke: cor, strokeWidth: 2, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 
@@ -69,7 +68,6 @@ export function BarraAbas({ abaAtual, aoMudar }: BarraAbasProps) {
   const margens = useSafeAreaInsets();
   const [tecladoAberto, setTecladoAberto] = useState(false);
 
-  // No Android o teclado empurra a tela para cima; a barra some para não ficar em cima dele.
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     const aoAbrir = Keyboard.addListener('keyboardDidShow', () => setTecladoAberto(true));

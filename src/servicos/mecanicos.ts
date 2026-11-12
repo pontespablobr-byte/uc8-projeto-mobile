@@ -1,7 +1,6 @@
 import { requisitar } from './api';
 import type { Especialidade, Mecanico } from '../types';
 
-// O telefone fica só com dígitos: formatarTelefone cuida da máscara.
 export interface DadosNovoMecanico {
   nome: string;
   telefone: string;

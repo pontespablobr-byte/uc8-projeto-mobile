@@ -109,7 +109,6 @@ export function TelaDetalheOrdem({ ordemId, aoVoltar, aoEditar }: TelaDetalheOrd
       setExcluindo(false);
       return;
     }
-    // A ordem não existe mais: volta para a lista.
     aoVoltar();
   }
 

@@ -65,7 +65,6 @@ interface LinhaPendente {
 
 let bancoAberto: Promise<SQLite.SQLiteDatabase> | undefined;
 
-// O banco é aberto uma vez só; as tabelas são criadas se ainda não existem.
 function banco(): Promise<SQLite.SQLiteDatabase> {
   if (bancoAberto === undefined) {
     bancoAberto = SQLite.openDatabaseAsync('frota.db').then(async (db) => {
@@ -117,7 +116,6 @@ function banco(): Promise<SQLite.SQLiteDatabase> {
       `);
       return db;
     });
-    // Se a abertura falhar, a próxima chamada tenta de novo.
     bancoAberto.catch(() => {
       bancoAberto = undefined;
     });
@@ -125,7 +123,6 @@ function banco(): Promise<SQLite.SQLiteDatabase> {
   return bancoAberto;
 }
 
-// Toda operação passa por aqui: qualquer falha sai como ErroDoBanco.
 async function noBanco<T>(operacao: (db: SQLite.SQLiteDatabase) => Promise<T>): Promise<T> {
   try {
     const db = await banco();
@@ -191,7 +188,6 @@ function paraPendente(linha: LinhaPendente): Pendente {
   };
 }
 
-// O que veio da nuvem, guardado para quando ela não responder.
 export function listarLocal(): Promise<DadosLocais> {
   return noBanco(async (db) => {
     const veiculos = await db.getAllAsync<LinhaVeiculo>('SELECT * FROM veiculos ORDER BY CAST(id AS INTEGER)');
@@ -205,7 +201,6 @@ export function listarLocal(): Promise<DadosLocais> {
   });
 }
 
-// Troca a cópia do aparelho pela da nuvem, tudo numa transação.
 export function guardarLocal(dados: DadosLocais): Promise<void> {
   return noBanco((db) =>
     db.withTransactionAsync(async () => {

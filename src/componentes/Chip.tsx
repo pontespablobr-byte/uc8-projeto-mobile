@@ -5,7 +5,6 @@ interface ChipProps {
   rotulo: string;
   ativo: boolean;
   aoTocar: () => void;
-  // Para grades de largura igual: menos folga e a altura inteira da célula.
   compacto?: boolean;
 }
 

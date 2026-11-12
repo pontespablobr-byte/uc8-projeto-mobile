@@ -3,8 +3,6 @@ import type { ContagemLocal, DadosLocais, DadosPendente, Pendente } from './tipo
 
 export type { ContagemLocal, DadosLocais, DadosPendente, Pendente } from './tipos';
 
-// No navegador o expo-sqlite ainda é experimental e pede configuração própria do servidor.
-// O app é para celular: aqui o banco local recusa toda operação, e a lista segue com a nuvem.
 function indisponivel<T>(): Promise<T> {
   return Promise.reject(new ErroDoBanco('O banco do aparelho não está disponível no navegador.'));
 }

@@ -3,8 +3,6 @@ import Svg, { Defs, Path, Pattern, Rect } from 'react-native-svg';
 import { cores, espacos } from '../tema/tema';
 import { Logo } from './Logo';
 
-// Faixa de risco de oficina (a mesma assinatura visual do projeto desktop):
-// um padrão de listras amarelas inclinadas que se repete na largura toda.
 function FaixaDeRisco() {
   return (
     <Svg width="100%" height={6}>

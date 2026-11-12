@@ -9,7 +9,6 @@ interface BadgeStatusProps {
   status: Status;
 }
 
-// Um único lugar decide o texto e a cor de cada status, do veículo e da ordem.
 const aparencia: Record<Status, { rotulo: string; variante: Variante }> = {
   ativo: { rotulo: 'Ativo', variante: 'sucesso' },
   em_manutencao: { rotulo: 'Em manutenção', variante: 'alerta' },

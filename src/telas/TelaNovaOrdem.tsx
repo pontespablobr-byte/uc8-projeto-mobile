@@ -18,8 +18,6 @@ export function TelaNovaOrdem({ aoCriar }: TelaNovaOrdemProps) {
 
   const { veiculos, mecanicos } = estado;
 
-  // O banco define o id, o status inicial e a data de abertura. Sem rede, a ordem
-  // fica no aparelho e aparece em "A enviar" na lista.
   async function criar(dados: DadosNovaOrdem): Promise<void> {
     const veiculo = veiculos.find((item) => item.id === dados.veiculoId);
     await incluir({

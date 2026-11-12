@@ -49,7 +49,6 @@ export type EstadoFrota =
   | ({ tipo: 'pronto'; origem: 'nuvem' } & DadosDaFrota)
   | ({ tipo: 'pronto'; origem: 'aparelho'; motivo: string } & DadosDaFrota);
 
-// O que a tela de nova OS entrega: a foto ainda no aparelho, se houver.
 export interface DadosNovaOrdemCompleta {
   veiculoId: string;
   mecanicoId: string;
@@ -64,7 +63,6 @@ export interface DadosNovaOrdemCompleta {
 interface ValorDaFrota {
   estado: EstadoFrota;
   recarregar: () => void;
-  // 'pendente' quando não havia rede: a ordem ficou no aparelho para enviar depois.
   incluir: (dados: DadosNovaOrdemCompleta) => Promise<'enviada' | 'pendente'>;
   incluirVeiculo: (dados: DadosNovoVeiculo) => Promise<Veiculo>;
   incluirMecanico: (dados: DadosNovoMecanico) => Promise<Mecanico>;
@@ -105,7 +103,6 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
     let cancelado = false;
     setEstado({ tipo: 'carregando' });
 
-    // Primeiro a fila: o que ficou no aparelho sobe antes de a lista ser lida.
     sincronizarPendentes()
       .catch((erro: unknown) => {
         registrarErro('sincronizar', erro);
@@ -121,7 +118,6 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
         }
       })
       .catch((erro: unknown) => {
-        // Sem a nuvem, mostra o que foi guardado no aparelho na última carga.
         const motivo = registrarErro('carga', erro).mensagem;
         Promise.all([listarLocal(), listarPendentes()])
           .then(([local, pendentes]) => {
@@ -145,7 +141,6 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
     };
   }, [tentativa]);
 
-  // Cada versão que veio da nuvem (ou foi alterada nela) fica guardada no aparelho.
   useEffect(() => {
     if (estado.tipo !== 'pronto' || estado.origem !== 'nuvem') return;
     guardarLocal({
@@ -169,7 +164,6 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
   }
 
   async function incluir(dados: DadosNovaOrdemCompleta): Promise<'enviada' | 'pendente'> {
-    // A tela já validou; o provedor confere de novo antes de enviar.
     const { veiculos, mecanicos } = dadosProntos();
     if (!veiculos.some((veiculo) => veiculo.id === dados.veiculoId)) {
       throw new ErroDeValidacao('Escolha um veículo cadastrado.');
@@ -190,7 +184,6 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
       );
       return 'enviada';
     } catch (erro: unknown) {
-      // Recusa do servidor volta para a tela; falta de rede vira pendente no aparelho.
       if (erro instanceof ErroDaApi) {
         throw erro;
       }
@@ -251,7 +244,6 @@ export function FrotaProvedor({ children }: { children: ReactNode }) {
     return novo;
   }
 
-  // Troca a ordem alterada pela versão que o banco devolveu.
   async function editarOrdem(id: string, alteracoes: AlteracoesOrdem): Promise<OrdemServico> {
     if (alteracoes.descricao !== undefined) validarDescricao(alteracoes.descricao);
     if (alteracoes.custoEstimado !== undefined) validarCusto(alteracoes.custoEstimado);

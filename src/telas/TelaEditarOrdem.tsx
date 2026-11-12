@@ -42,7 +42,6 @@ export function TelaEditarOrdem({ ordemId, aoVoltar }: TelaEditarOrdemProps) {
   }
 
   const ordemAtual = ordem;
-  // O veículo da ordem aparece mesmo que tenha ficado inativo depois.
   const veiculos = estado.veiculos.filter(
     (veiculo) => veiculo.status !== 'inativo' || veiculo.id === ordemAtual.veiculoId,
   );
@@ -53,7 +52,6 @@ export function TelaEditarOrdem({ ordemId, aoVoltar }: TelaEditarOrdemProps) {
   async function salvar(dados: DadosNovaOrdem): Promise<void> {
     const { foto, ...campos } = dados;
     const fotoUrl = await resolverFoto(foto);
-    // A quilometragem só muda se a ordem passar para outro veículo.
     const novoVeiculo =
       campos.veiculoId === ordemAtual.veiculoId
         ? undefined

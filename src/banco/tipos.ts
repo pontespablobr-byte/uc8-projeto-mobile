@@ -1,6 +1,5 @@
 import type { Mecanico, OrdemServico, Prioridade, TipoManutencao, Veiculo } from '../types';
 
-// Ordem criada sem rede: fica no aparelho até a próxima carga com rede.
 export interface DadosPendente {
   veiculoId: string;
   mecanicoId: string;

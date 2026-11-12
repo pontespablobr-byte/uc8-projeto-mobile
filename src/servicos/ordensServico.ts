@@ -17,7 +17,6 @@ export interface DadosInclusaoOrdem {
   fotoUrl: string | null;
 }
 
-// Campos que a edição e a troca de status podem mudar; os ausentes ficam como estão.
 export interface AlteracoesOrdem {
   veiculoId?: string;
   mecanicoId?: string;
@@ -67,7 +66,6 @@ function ehOrdemRemota(valor: unknown): valor is OrdemRemota {
     typeof campos.custo_estimado === 'number' &&
     typeof campos.data_abertura === 'string' &&
     (campos.data_conclusao === null || typeof campos.data_conclusao === 'string') &&
-    // Antes do SQL de fotos a coluna não existe e o campo não vem.
     (campos.foto_url === undefined ||
       campos.foto_url === null ||
       typeof campos.foto_url === 'string')
@@ -112,7 +110,6 @@ function paraLinha(alteracoes: AlteracoesOrdem): Record<string, unknown> {
   return linha;
 }
 
-// Mais recentes primeiro, a mesma posição em que uma ordem nova entra na lista.
 export async function carregarOrdens(): Promise<OrdemServico[]> {
   const corpo = await requisitar('ordens_servico?select=*&order=id.desc');
   if (!ehListaDeOrdens(corpo)) {
@@ -123,7 +120,6 @@ export async function carregarOrdens(): Promise<OrdemServico[]> {
 
 export async function incluirOrdem(dados: DadosInclusaoOrdem): Promise<OrdemServico> {
   const { fotoUrl, ...resto } = dados;
-  // Sem foto, a coluna foto_url nem é enviada.
   const linha = paraLinha(fotoUrl === null ? resto : dados);
   const corpo = await requisitar('ordens_servico?select=*', 'POST', linha);
   if (!ehListaDeOrdens(corpo) || corpo.length !== 1) {
@@ -132,7 +128,6 @@ export async function incluirOrdem(dados: DadosInclusaoOrdem): Promise<OrdemServ
   return paraOrdem(corpo[0]);
 }
 
-// Só abertas e canceladas: a regra está no banco (supabase/exclusao.sql) e na tela.
 export async function excluirOrdem(id: string): Promise<void> {
   const corpo = await requisitar(
     `ordens_servico?id=eq.${encodeURIComponent(id)}&select=id`,
@@ -142,7 +137,6 @@ export async function excluirOrdem(id: string): Promise<void> {
     throw new Error('Resposta inesperada da API');
   }
   if (corpo.length !== 1) {
-    // Sem a política de exclusão, ou com a ordem em andamento/concluída, nada é apagado.
     throw new ErroDaApi(
       403,
       'A ordem não foi excluída. Só ordens abertas ou canceladas podem ser excluídas; confira também se o arquivo supabase/exclusao.sql foi executado no Supabase.',
@@ -163,7 +157,6 @@ export async function atualizarOrdem(
     throw new Error('Resposta inesperada da API');
   }
   if (corpo.length !== 1) {
-    // Com a RLS ligada e sem a política de alteração, a API devolve uma lista vazia.
     throw new ErroDaApi(
       403,
       'A ordem não foi alterada. Confira se o arquivo supabase/edicao_e_fotos.sql foi executado no Supabase.',

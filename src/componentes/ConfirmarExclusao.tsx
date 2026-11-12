@@ -9,7 +9,6 @@ interface ConfirmarExclusaoProps {
   aoCancelar: () => void;
 }
 
-// Confirmação dentro da própria tela: funciona igual no celular e no navegador.
 export function ConfirmarExclusao({
   ordemId,
   excluindo,

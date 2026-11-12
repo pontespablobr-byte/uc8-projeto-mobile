@@ -8,7 +8,6 @@ import { rotulosTipo } from '../utils/rotulos';
 
 const tipos: TipoManutencao[] = ['preventiva', 'corretiva'];
 
-// Soma em centavos para não acumular erro de vírgula flutuante (0,1 + 0,2).
 function somar(valores: number[]): number {
   return valores.reduce((total, valor) => total + Math.round(valor * 100), 0) / 100;
 }
@@ -20,7 +19,6 @@ export function TelaRelatorios() {
     return <AvisoEstadoFrota estado={estado} aoTentarDeNovo={recarregar} />;
   }
 
-  // Concluídas mais recentes primeiro.
   const concluidas = estado.ordens
     .filter((ordem) => ordem.status === 'concluida')
     .sort((a, b) => (b.dataConclusao ?? '').localeCompare(a.dataConclusao ?? ''));

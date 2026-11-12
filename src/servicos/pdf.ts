@@ -4,7 +4,6 @@ import { Platform } from 'react-native';
 import type { Mecanico, OrdemServico, Veiculo } from '../types';
 import { montarHtmlDaOrdem } from '../utils/htmlOrdem';
 
-// Baixa a foto e a devolve como data URI, para ela entrar dentro do PDF.
 async function paraDataUri(url: string): Promise<string> {
   const resposta = await fetch(url);
   if (!resposta.ok) {
@@ -22,7 +21,6 @@ async function paraDataUri(url: string): Promise<string> {
   });
 }
 
-// No navegador o expo-print imprime a página inteira; aqui imprimimos só o documento.
 function imprimirNoNavegador(html: string): void {
   const quadro = document.createElement('iframe');
   quadro.setAttribute('aria-hidden', 'true');
@@ -52,7 +50,6 @@ export async function gerarPdfDaOrdem(
   veiculo: Veiculo | undefined,
   mecanico: Mecanico | undefined,
 ): Promise<void> {
-  // Sem a foto o PDF ainda sai: a falha ao baixá-la não impede o documento.
   const foto = ordem.fotoUrl ? await paraDataUri(ordem.fotoUrl).catch(() => null) : null;
   const html = montarHtmlDaOrdem(ordem, veiculo, mecanico, foto);
 
@@ -61,7 +58,6 @@ export async function gerarPdfDaOrdem(
     return;
   }
 
-  // Tamanho A4 em pontos (72 por polegada).
   const { uri } = await Print.printToFileAsync({ html, width: 595, height: 842 });
   if (!(await Sharing.isAvailableAsync())) {
     throw new Error('O compartilhamento não está disponível neste aparelho.');

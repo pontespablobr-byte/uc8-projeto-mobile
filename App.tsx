@@ -19,7 +19,6 @@ import { cores } from './src/tema/tema';
 
 export default function App() {
   const [aba, setAba] = useState<Aba>('veiculos');
-  // Guarda só o id: assim o detalhe sempre mostra a ordem atualizada.
   const [ordemSelecionadaId, setOrdemSelecionadaId] = useState<string | null>(null);
   const [cadastro, setCadastro] = useState<'veiculo' | 'mecanico' | null>(null);
   const [editando, setEditando] = useState(false);
@@ -31,7 +30,6 @@ export default function App() {
     setEditando(false);
   }
 
-  // Ordem de prioridade: cadastro, detalhe da OS, depois a tela da aba atual.
   function renderizarConteudo() {
     if (cadastro === 'veiculo') {
       return <TelaNovoVeiculo aoVoltar={() => setCadastro(null)} />;
@@ -80,7 +78,6 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <FrotaProvedor>
-        {/* Embaixo a margem fica por conta da barra de abas, que pinta até a borda. */}
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
           <StatusBar style="light" />
 

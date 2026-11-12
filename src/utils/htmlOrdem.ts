@@ -13,7 +13,6 @@ import {
   rotulosTipo,
 } from './rotulos';
 
-// Todo texto digitado passa por aqui antes de entrar no HTML do PDF.
 export function escaparHtml(texto: string): string {
   return texto
     .replace(/&/g, '&amp;')
@@ -27,8 +26,6 @@ function linha(rotulo: string, valor: string): string {
   return `<tr><th>${escaparHtml(rotulo)}</th><td>${escaparHtml(valor)}</td></tr>`;
 }
 
-// Monta o documento da ordem de serviço. A foto entra já como data URI, porque o
-// gerador de PDF do iOS não carrega imagens por endereço local.
 export function montarHtmlDaOrdem(
   ordem: OrdemServico,
   veiculo: Veiculo | undefined,

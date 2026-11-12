@@ -24,10 +24,8 @@ interface FormularioOrdemServicoProps {
   veiculos: Veiculo[];
   mecanicos: Mecanico[];
   aoCriar: (dados: DadosNovaOrdem) => Promise<void>;
-  // Na edição, o formulário já começa preenchido com a ordem.
   inicial?: DadosNovaOrdem;
   textoBotao?: string;
-  // Nome da operação no registro de erros (cadastro ou edição).
   origem?: string;
 }
 
@@ -129,7 +127,6 @@ export function FormularioOrdemServico({
         foto,
       });
     } catch (falha: unknown) {
-      // Mantém o que foi digitado para a pessoa poder tentar de novo.
       setErro(registrarErro(origem, falha).mensagem);
       return;
     } finally {
