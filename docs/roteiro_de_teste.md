@@ -37,6 +37,7 @@ Legenda do resultado: **aprovado** (o observado é o esperado), **falha** (não 
 | C21 | Relatórios | Aba Relatórios | Só OS concluídas; valor geral igual à soma; subtotal por tipo | aprovado | navegador, 11/11/2026 | - |
 | C22 | Sobre | Aba Sobre | Começa nos quadrados de contagem; versão do app; "Guardados no aparelho" | aprovado | navegador, 11/11/2026 | - |
 | C23 | Barra de abas | Qualquer aba | Barra embaixo, 5 abas com ícone, aba atual marcada | aprovado | navegador, 11/11/2026 | - |
+| C31 | Duas colunas na tela larga | Abrir Veículos e Ordens numa janela de 900 px; voltar para 412 px | Duas colunas lado a lado em tela larga; uma coluna no celular | aprovado | navegador, 11/11/2026 | - |
 | C24 | Teclado no Android | Nova OS; tocar na descrição | A barra de abas some enquanto o teclado está aberto | não executado | - | - |
 
 ## Dados no aparelho (cache e fila)
@@ -46,8 +47,8 @@ Legenda do resultado: **aprovado** (o observado é o esperado), **falha** (não 
 | C25 | Cache guardado | Carga com rede; ler o banco do aparelho | Veículos, mecânicos e ordens iguais aos da nuvem; carga seguinte substitui, sem duplicar | aprovado | Node, 11/11/2026 | - |
 | C26 | Carga sem rede, com cache | Carregar uma vez com rede; desligar a rede; fechar e abrir | Lista do aparelho com o aviso "Mostrando ... guardados no aparelho" | não executado | - | - |
 | C27 | Carga sem rede, sem cache | Instalação nova; sem rede; abrir | Tela de erro com "Sem conexão com o servidor..." e "Tentar de novo" | não executado | - | - |
-| C28 | Cadastro sem rede | Sem rede; Nova OS; Abrir | Volta a Ordens com "A enviar (1): ..." | não executado | - | - |
-| C29 | Sincronização | Fila com 3 ordens (uma com foto); a 3ª sem rede | Envia as 2 primeiras (a foto antes da ordem) e para; a 3ª continua na fila | aprovado | Node, 11/11/2026 | - |
+| C28 | Cadastro sem rede | Sem rede; Nova OS; Abrir | Volta a Ordens com "A enviar (1): ..." | aprovado | aparelho (iPhone, Expo Go), 11/11/2026 | - |
+| C29 | Sincronização | Fila com 3 ordens (uma com foto); a 3ª sem rede | Envia as 2 primeiras (a foto antes da ordem) e para; a 3ª continua na fila. No aparelho: com a rede de volta, a ordem sai de "A enviar" e aparece na lista | aprovado | Node e aparelho (iPhone, Expo Go), 11/11/2026 | - |
 | C30 | Pendente recusado | Fila com uma ordem que o Supabase recusa (400); depois com a chave errada (401) | 400: descartada e registrada; 401: continua na fila | aprovado | Node, 11/11/2026 | - |
 
 ## Erros tratados
@@ -58,7 +59,7 @@ Legenda do resultado: **aprovado** (o observado é o esperado), **falha** (não 
 | E02 | Tentar de novo | Na tela de erro, corrigir a causa e tocar em "Tentar de novo" | A lista carrega | aprovado | navegador, 11/11/2026 | - |
 | E03 | Recusa do servidor no cadastro | Nova OS com um valor que o banco recusa | "O servidor recusou os dados enviados (400): ..." e o que foi digitado continua no formulário | aprovado | navegador, 11/11/2026 | - |
 | E04 | Validação na tela | Nova OS sem veículo, sem mecânico, sem descrição, custo `abc` | Uma mensagem por campo; nenhum POST | aprovado | navegador, 11/11/2026 | - |
-| E05 | Validação de veículo | Placa `ab`; placa repetida; ano 1900; revisão menor que a quilometragem | Mensagem para cada caso; nenhum POST | aprovado | navegador, 11/11/2026 | - |
+| E05 | Validação de veículo | Placa `ab`; placa repetida; ano 1900; revisão menor que a quilometragem | Mensagem embaixo do campo com problema, que fica com borda vermelha; ao corrigir, o erro sai do campo; nenhum POST | aprovado | navegador, 11/11/2026 | - |
 | E06 | Valor em reais | Custo `1.234`, `1.234,50`, `1e3`, `0x10` | R$ 1.234,00; R$ 1.234,50; recusado; recusado | corrigido | Node, 10/11/2026 | `1.234` virava R$ 1,23 e `1e3` era aceito; a leitura do valor foi refeita |
 | E07 | Data no fuso do aparelho | OS aberta às 21:02 de 09/11 (00:02 UTC de 10/11) | "09/11/2026" no horário de Brasília | corrigido | Node, 10/11/2026 | A data saía em UTC, um dia adiantada à noite |
 | E08 | Alteração sem permissão | Status ou edição com o SQL de edição não executado | "A ordem não foi alterada. Confira se o arquivo supabase/edicao_e_fotos.sql foi executado..." | aprovado | navegador, 11/11/2026 | - |
@@ -66,4 +67,5 @@ Legenda do resultado: **aprovado** (o observado é o esperado), **falha** (não 
 | E10 | Banco do aparelho indisponível | Banco que não abre (simulado no Node; no navegador ele não existe) | `ErroDoBanco`; a lista da nuvem continua; Sobre mostra "indisponível"; registros `[...] banco:` no console | aprovado | Node e navegador, 11/11/2026 | - |
 | E11 | Sem rede e sem banco | No navegador, Nova OS com a rede cortada | "Não foi possível ler ou guardar os dados no aparelho." e o formulário mantido | aprovado | navegador, 11/11/2026 | - |
 | E12 | Tabela ausente | Abrir o app antes de executar `esquema_frota.sql` | "O Supabase não encontrou a tabela (404)..." | falha | aparelho (Expo Go), 10/11/2026 | Mostrou o texto da API em inglês ("Could not find the table..."); a mensagem foi trocada por uma que manda conferir o SQL. Falta repetir no aparelho |
-| E13 | Exclusão de veículo pela API | DELETE em `veiculos` com a chave publicável, depois do `endurecimento.sql` | Recusa com 42501 (permission denied) | não executado | - | - |
+| E14 | Rede ruim no iPhone | Nova OS com sinal fraco (LTE); Abrir | A ordem vai para "A enviar"; falta de rede reconhecida, sem caixa vermelha de erro | corrigido | aparelho (iPhone, Expo Go), 11/11/2026 | O iPhone esperou cerca de um minuto e avisou com `fetch failed: The request timed out.` num `Error` comum, que saiu como "desconhecido" e em `console.error` (caixa vermelha). Agora a falta de rede é reconhecida por esse texto, o pedido desiste em 15 segundos (60 para a foto) e rede e validação vão para `console.log`. Repetido no aparelho: aprovado |
+| E13 | Exclusão de veículo pela API | DELETE em `veiculos` com a chave publicável, depois do `endurecimento.sql` | Recusa com 42501 (permission denied) | aprovado | API do Supabase (curl, DELETE num id inexistente em `veiculos` e `mecanicos`), 11/11/2026 | - |

@@ -65,6 +65,7 @@ O app é voltado ao **mecânico/gestor de frota em campo**: consultar veículos,
 - Os erros passam por um só lugar (`src/erros/erros.ts`): `classificarErro` escolhe a mensagem da tela e `registrarErro` escreve a origem e o detalhe no console.
 - No navegador o banco do aparelho não é usado (o `expo-sqlite` para web ainda é experimental): a lista vem só da nuvem.
 - O roteiro de teste, com os resultados, está em `docs/roteiro_de_teste.md`.
+- A documentação completa (arquitetura, dados, fluxos, segurança e erros) está em [`docs/documentacao.md`](docs/documentacao.md).
 
 ### O que fica de fora
 
