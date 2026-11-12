@@ -2,6 +2,13 @@
 
 Aplicativo mobile da UC8, por Pablo Alejandro. Recorte do sistema **Gestão e manutenção preventiva e corretiva de veículos**, da UC5.
 
+## Entrega final
+
+- **Versão:** 1.0.0, entregue em 11/11/2026.
+- **Situação:** projeto concluído, com os módulos 05 a 08 atendidos.
+- **Documentação:** [`docs/documentacao.md`](docs/documentacao.md).
+- **Roteiro de teste:** [`docs/roteiro_de_teste.md`](docs/roteiro_de_teste.md), com 38 casos aprovados, 5 corrigidos, 1 falha (correção já feita, falta repetir no celular) e 4 não executados (dependem do aparelho).
+
 ## Recorte do sistema
 
 O app é voltado ao **mecânico/gestor de frota em campo**: consultar veículos, abrir e acompanhar ordens de serviço (preventivas e corretivas) direto do celular.
